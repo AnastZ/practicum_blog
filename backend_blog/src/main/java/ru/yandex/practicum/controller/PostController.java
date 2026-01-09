@@ -35,9 +35,9 @@ public class PostController {
                                         @RequestParam("pageNumber") final int pageNumber,
                                         @RequestParam("pageSize")  final int pageSize) {
 
-        boolean hasPreview = pageNumber > 1;
+        final boolean hasPreview = pageNumber > 1;
         final long countPages = postService.getCountPagesForSearchByTitle(search, pageSize);
-        boolean hasNext = pageNumber < countPages;
+        final boolean hasNext = pageNumber < countPages;
         final List<PostDTO> foundRecords = postService.searchAllByTitle(search, pageNumber, pageSize);
         return new FoundPostsDTO(foundRecords, hasPreview, hasNext, countPages);
     }

@@ -37,15 +37,33 @@ public class PostControllerTest {
 
     @Test
     void searchPosts_isOk() throws Exception {
-        mockMvc.perform(get("/api/posts")
-                        .param("search", "title")
-                        .param("pageNumber", "1")
-                        .param("pageSize", "3")
+        final String search = "111";
+        final String pageNumber = "1";
+        final String pageSize = "3";
+
+        final String s = mockMvc.perform(get("/api/posts")
+                        .param("search", search)
+                        .param("pageNumber", pageNumber)
+                        .param("pageSize", pageSize)
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.hasPrev").value(false))
-                .andExpect(jsonPath("$.posts.length()" ).value(lessThanOrEqualTo(3)));
+                .andExpect(jsonPath("$.posts.length()").value(lessThanOrEqualTo(3)))
+                .andExpect(jsonPath("$.posts[?(@.text.length() > 131 || @.text.length() == 0)]").isEmpty())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        System.out.println(s);
+
+        mockMvc.perform(get("/api/posts")
+                        .param("search", search)
+                        .param("pageNumber", pageNumber)
+                        .param("pageSize", String.valueOf(pageSize))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.hasNext").value(true))
+                .andExpect(jsonPath("$.posts.length()").value(pageSize));
     }
 
 }

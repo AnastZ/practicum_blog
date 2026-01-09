@@ -10,7 +10,7 @@ import java.util.Objects;
 public class Comment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "idcomment")
+    @Column(name = "idcomment", unique = true)
     private Long id;
 
     @NotNull

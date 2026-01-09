@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.model.entity.Comment;
 import ru.yandex.practicum.model.entity.Post;
+import ru.yandex.practicum.model.entity.Tag;
 
 
 @Component
@@ -27,6 +28,7 @@ public class SessionFactoryProvider implements DbSessionProvider {
     private @NotNull SessionFactory buildSessionFactory() throws ExceptionInInitializerError{
         try {
             return new Configuration()
+                    .addAnnotatedClass(Tag.class)
                     .addAnnotatedClass(Comment.class)
                     .addAnnotatedClass(Post.class)
                     .buildSessionFactory();

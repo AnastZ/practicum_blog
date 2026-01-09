@@ -11,37 +11,42 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.model.dto.PostDTO;
+import ru.yandex.practicum.model.entity.Post;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 @Repository
-public class PostRepository  {
+public class PostRepository {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final DbSessionProvider sessionProvider;
+
     protected PostRepository(@NotNull final DbSessionProvider sessionProvider) {
         this.sessionProvider = sessionProvider;
     }
 
     /**
      * Получить количество записей поискового запроса.
+     *
      * @param searchString поисковой запрос по наименованию поста.
      * @return количество постов или 0.
      */
     @Transactional
     public long getCountRecordInSearchQuery(@NotNull final String searchString) {
         final SessionFactory sessionFactory = sessionProvider.getSessionFactory();
-        if(sessionFactory.isClosed()){
+        if (sessionFactory.isClosed()) {
             logger.error("SessionFactory is close.");
             return 1;
         }
-        try(final Session session = sessionFactory.openSession()){
+        try (final Session session = sessionFactory.openSession()) {
             final Long countRecords = session.createNamedQuery("countRecordsForSearchByTitle", Long.class)
                     .setParameter("searchString", searchString)
                     .getSingleResult();
             return countRecords;
-        }catch (HibernateException he){
+        } catch (HibernateException he) {
             logger.error(he.getMessage());
         }
         return 0;
@@ -49,35 +54,57 @@ public class PostRepository  {
 
     /**
      * Получить результаты поиска по наименованию постов.
+     *
      * @param searchString строка поиска по наименованию поста.
-     * @param pageNumber номер страницы, где 0 это первая страница.
-     * @param pageSize количество постов на странице.
+     * @param pageNumber   номер страницы, где 0 это первая страница.
+     * @param pageSize     количество постов на странице.
      * @return результаты поиска по наименованию постов.
      */
     @Transactional
-    public @NotNull List<PostDTO> findAllByStringQuery(@NotNull final String searchString,
-                                                final int pageNumber,
-                                                final int pageSize){
-        if(pageNumber < 0 || pageSize < 1){
+    public @NotNull List<Post> findAllByStringQuery(@NotNull final String searchString,
+                                                       final int pageNumber,
+                                                       final int pageSize) {
+        if (pageNumber < 0 || pageSize < 1) {
             logger.warn("Переданы некорректные входные данные для поиска постов. Номер страницы (начиная с 0), переданное значение: {}. Количество записей на странице (от 1), переданное значение: {}.", pageNumber, pageSize);
             return Collections.emptyList();
         }
         final SessionFactory sessionFactory = sessionProvider.getSessionFactory();
-        if(sessionFactory.isClosed()){
+        if (sessionFactory.isClosed()) {
             logger.error("SessionFactory is close.");
             return Collections.emptyList();
         }
-        try(final Session session = sessionFactory.openSession()){
-
-            final List<PostDTO> results = session.createNamedSelectionQuery("searchByTitle", PostDTO.class)
+        try (final Session session = sessionFactory.openSession()) {
+            final List<Long> postIds = session.createNamedQuery("getIdsForSearchByTitle", Long.class)
                     .setParameter("searchString", searchString)
                     .setPage(Page.page(pageSize, pageNumber))
                     .getResultList();
+            final List<Post> results = session.createNamedSelectionQuery("searchByTitle", Post.class)
+                    .setParameter("ids", postIds)
+                    .getResultList();
             return results;
-        }catch (HibernateException he){
+        } catch (HibernateException he) {
             logger.error("Error in method {}:{}", "findAllByStringQuery", he.getMessage());
         }
         return Collections.emptyList();
+    }
+
+    /**
+     * Получить пост из БД по его уникальному номеру.
+     * @param id уникальный номер поста.
+     * @return найденный пост.
+     */
+    public @NotNull Optional<Post> findById(@NotNull final Long id) {
+        if (id < 1) {
+            logger.warn("Передан некорректный уникальный номер для поиска в БД. Переданное значение: {}", id);
+            return Optional.empty();
+        }
+        final SessionWorker<Post> worker = new SessionWorker<>();
+        return worker.workWithSession(sessionProvider.getSessionFactory(),
+                logger,
+                (session) -> {
+                    return session.createNamedQuery("findSinglePost", Post.class)
+                            .setParameter("id", id).getSingleResult();
+                });
     }
 }
 
