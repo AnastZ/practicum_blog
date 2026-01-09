@@ -5,12 +5,18 @@ import jakarta.validation.constraints.NotNull;
 
 import java.util.Objects;
 
+@NamedQueries(value = {
+        @NamedQuery(name = "findByNames",
+        query = "SELECT t " +
+        " FROM Tag t " +
+        " WHERE t.name IN (:names)")
+})
+
 @Entity
 public class Tag {
 
     @Id
-    @GeneratedValue
-    @NotNull
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "idtag", nullable = false,  unique = true)
     private Long id;
 

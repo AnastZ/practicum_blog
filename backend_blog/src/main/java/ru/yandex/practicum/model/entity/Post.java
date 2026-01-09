@@ -1,6 +1,7 @@
 package ru.yandex.practicum.model.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import org.hibernate.annotations.Formula;
@@ -30,34 +31,13 @@ import java.util.Objects;
                         " FROM Post p " +
                         " LEFT JOIN FETCH p.tags " +
                         " WHERE p.id = :id")
-
-
-       /* @NamedQuery(name = "searchByTitle",
-                query = "SELECT new ru.yandex.practicum.model.dto.PostDTO(p.id, p.title, p.text, p.tags, p.likesCount, COUNT(c)) " +
-                        " FROM Post p " +
-                        " LEFT JOIN p.tags" +
-                        " LEFT JOIN Comment c ON c.post = p " +
-                        " WHERE p.title LIKE CONCAT('%', :searchString, '%') " +
-                        " GROUP BY p.id " +
-                        " ORDER BY p.createdDate DESC "),
-
-        @NamedQuery(name = "findSinglePost",
-                query = "SELECT new ru.yandex.practicum.model.dto.PostDTO(p.id, p.title, p.text, p.tags, p.likesCount, COUNT(c)) " +
-                        " FROM Post p " +
-                        " LEFT JOIN p.tags" +
-                        " LEFT JOIN Comment c ON c.post = p " +
-                        " WHERE p.id = :id " +
-                        " GROUP BY p.id " +
-                        " ORDER BY p.createdDate DESC ")    */
-
-
 })
 @Entity
 public class Post {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+
     @Column(name = "idpost", unique = true)
-    @NotNull
     private Long id;
 
     @Column(unique = true, nullable = false, length = 45)
@@ -72,7 +52,7 @@ public class Post {
 
     @Column(name = "likes_count", nullable = false)
     @NotNull
-    @Size(min = 0)
+    @Min(value = 0, message = "Число лайков не может быть ниже нуля.")
     private Long likesCount;
 
     @Column(name = "created_date", nullable = false)
@@ -101,9 +81,12 @@ public class Post {
                 @NotNull final String text,
                 @NotNull final Long likesCount,
                 @NotNull final Long commentsCount,
+                @NotNull final LocalDate date,
                 @NotNull final List<Tag> tags) {
-               this.title = title;
+
+        this.title = title;
         this.text = text;
+        this.createdDate = date;
         this.likesCount = likesCount;
         this.commentsCount = commentsCount;
         this.tags = tags;

@@ -1,6 +1,7 @@
 package ru.yandex.practicum.repository;
 
 import jakarta.transaction.Transactional;
+import jakarta.validation.*;
 import jakarta.validation.constraints.NotNull;
 
 import org.hibernate.HibernateException;
@@ -36,20 +37,15 @@ public class PostRepository {
      */
     @Transactional
     public long getCountRecordInSearchQuery(@NotNull final String searchString) {
-        final SessionFactory sessionFactory = sessionProvider.getSessionFactory();
-        if (sessionFactory.isClosed()) {
-            logger.error("SessionFactory is close.");
-            return 1;
-        }
-        try (final Session session = sessionFactory.openSession()) {
-            final Long countRecords = session.createNamedQuery("countRecordsForSearchByTitle", Long.class)
-                    .setParameter("searchString", searchString)
-                    .getSingleResult();
-            return countRecords;
-        } catch (HibernateException he) {
-            logger.error(he.getMessage());
-        }
-        return 0;
+        final SessionWorker<Long> worker = new SessionWorker<Long>();
+        final Optional<Long> result = worker.workWithSession(sessionProvider.getSessionFactory(), logger,
+                s->{
+                    final Long countRecords = s.createNamedQuery("countRecordsForSearchByTitle", Long.class)
+                            .setParameter("searchString", searchString)
+                            .getSingleResult();
+                    return countRecords;
+                });
+        return result.orElse(0L);
     }
 
     /**
@@ -102,6 +98,30 @@ public class PostRepository {
                     return session.createNamedQuery("findSinglePost", Post.class)
                             .setParameter("id", id).getSingleResult();
                 });
+    }
+
+    public Post save(@NotNull final Post post) {
+
+        return sessionProvider.getSessionFactory().fromTransaction(s->{
+            final Post p = s.merge(post);
+            s.flush();
+            return p;
+        });
+       /* try(ValidatorFactory factory = Validation.buildDefaultValidatorFactory()){
+            final Validator validator = factory.getValidator();
+            final Set<ConstraintViolation<Post>> violations = validator.validate(post);
+            if(! violations.isEmpty()){
+                violations.forEach(violation -> logger.warn(violation.getMessage()));
+                return Optional.empty();
+            }
+            sessionProvider.getSessionFactory().inTransaction(s->{
+                s.persist(post);
+            });
+            return Optional.of(post);
+        }catch (ValidationException e){
+            logger.error(e.getMessage());
+        }
+        return Optional.empty();*/
     }
 }
 

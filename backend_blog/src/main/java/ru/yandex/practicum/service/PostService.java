@@ -1,14 +1,18 @@
 package ru.yandex.practicum.service;
 
+import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.model.DTOMapper;
+import ru.yandex.practicum.model.dto.AddingPostDTO;
 import ru.yandex.practicum.model.entity.Post;
+import ru.yandex.practicum.model.entity.Tag;
 import ru.yandex.practicum.repository.PostRepository;
 import ru.yandex.practicum.repository.Utils;
 import ru.yandex.practicum.model.dto.PostDTO;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -18,12 +22,14 @@ public class PostService {
 
     private final PostRepository postRepository;
     private final DTOMapper<Post, PostDTO> dtoMapper;
-
+    private final TagService tagService;
 
     public PostService(@NotNull final PostRepository postRepository,
-                       @NotNull final DTOMapper<Post, PostDTO> dtoMapper) {
+                       @NotNull final DTOMapper<Post, PostDTO> dtoMapper,
+                       @NotNull final TagService tagService) {
         this.postRepository = postRepository;
         this.dtoMapper = dtoMapper;
+        this.tagService = tagService;
     }
 
 
@@ -72,5 +78,17 @@ public class PostService {
      */
     public Optional<PostDTO> findById(@NotNull final Long id) {
         return postRepository.findById(id).flatMap(dtoMapper::toDTO);
+    }
+    @Transactional
+    public PostDTO savePost(@NotNull final AddingPostDTO addingPost) {
+        final List<Tag> tags = tagService.findByNames(addingPost.tags());
+        final Post newPost = new Post(addingPost.title(),
+                addingPost.text(),
+                0L,
+                0L,
+                LocalDate.now(),
+                tags);
+        final Post post = postRepository.save(newPost);
+        return dtoMapper.toDTO(post).orElse(PostDTO.getEmpty());
     }
 }

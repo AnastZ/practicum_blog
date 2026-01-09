@@ -4,12 +4,17 @@ package ru.yandex.practicum.controller;
 import jakarta.validation.constraints.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.model.dto.AddingPostDTO;
 import ru.yandex.practicum.model.dto.FoundPostsDTO;
 import ru.yandex.practicum.model.dto.PostDTO;
+import ru.yandex.practicum.model.entity.Post;
 import ru.yandex.practicum.service.PostService;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/posts")
@@ -30,10 +35,10 @@ public class PostController {
      */
     @GetMapping()
     @ResponseBody
-    protected FoundPostsDTO searchPosts(@RequestParam("search") @NotNull final String search,
+    protected FoundPostsDTO searchPosts(@RequestParam("search") final String search,
                                         @RequestParam("pageNumber") final int pageNumber,
                                         @RequestParam("pageSize")  final int pageSize) {
-        if(pageNumber < 1 || pageSize < 1) {
+        if(Objects.isNull(search) || pageNumber < 1 || pageSize < 1) {
             logger.warn("Неккоректные данные запроса. Ожидается, что номер страницы (pageNumber) не меньше 1, переданный номер: {}. Ожидается, что размер страницы (pageSize) не меньше 1. Переданный размер: {}.", pageNumber, pageSize);
             return FoundPostsDTO.getEmpty();
         }
@@ -45,14 +50,29 @@ public class PostController {
         return new FoundPostsDTO(foundRecords, hasPreview, hasNext, countPages);
     }
 
+    /**
+     * Найти пост по уникальному номеру.
+     * @param id уникальные номер поста (больше 0)
+     * @return найденный пост.
+     */
     @GetMapping("/{id}")
     @ResponseBody
-    protected PostDTO findPostById(@PathVariable("id") @NotNull final Long id) {
-        if(id < 1) {
+    protected PostDTO findPostById(@PathVariable("id") final Long id) {
+        if(Objects.isNull(id) || id < 1) {
             logger.warn("Некорректный запрос. Уникальный номер поста не может быть ниже 1. Переданный уникальный номер: {}.", id);
             return PostDTO.getEmpty();
         }
-        return postService.findById(id).orElse(PostDTO.getEmpty());
+        final PostDTO dto = postService.findById(id).orElse(PostDTO.getEmpty());
+        System.out.println(dto.toString());
+        return dto;
+    }
+
+    @PostMapping
+    @ResponseBody
+    @ResponseStatus(HttpStatus.CREATED)
+    protected PostDTO savePost(@RequestBody final AddingPostDTO post) {
+        return postService.savePost(post);
+
     }
 }
 
