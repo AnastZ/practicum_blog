@@ -27,12 +27,20 @@ public record PostDTO(Long id,
         this.likesCount = likesCount;
         this.commentsCount = commentsCount;
     }
-
     /**
      * Получить неизменяемый массив наименований тегов.
      * @return unmodifiableList наименований тегов.
      */
     public @NotNull List<String> getTags() {
         return tags;
+    }
+
+    public static @NotNull PostDTO getEmpty(){
+        return new PostDTO(-1L,
+                "",
+                "",
+                Collections.emptyList(),
+                0L,
+                0L);
     }
 }

@@ -28,23 +28,17 @@ public record FoundPostsDTO(@NotNull List<PostDTO> posts,
         this.lastPage = lastPage;
     }
 
-    @Override
-    public List<PostDTO> posts() {
+    /**
+     * Получить неизменяемый массив постов.
+     * @return unmodifiableList с постами.
+     */
+    public @NotNull List<PostDTO> getPosts() {
         return posts;
     }
-
-    @Override
-    public boolean hasPrev() {
-        return hasPrev;
-    }
-
-    @Override
-    public boolean hasNext() {
-        return hasNext;
-    }
-
-    @Override
-    public long lastPage() {
-        return lastPage;
+    public static FoundPostsDTO getEmpty() {
+        return new FoundPostsDTO(Collections.emptyList(),
+                false,
+                false,
+                1);
     }
 }

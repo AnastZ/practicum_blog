@@ -4,7 +4,6 @@ package ru.yandex.practicum.controller;
 import jakarta.validation.constraints.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.model.dto.FoundPostsDTO;
 import ru.yandex.practicum.model.dto.PostDTO;
@@ -34,6 +33,10 @@ public class PostController {
     protected FoundPostsDTO searchPosts(@RequestParam("search") @NotNull final String search,
                                         @RequestParam("pageNumber") final int pageNumber,
                                         @RequestParam("pageSize")  final int pageSize) {
+        if(pageNumber < 1 || pageSize < 1) {
+            logger.warn("Неккоректные данные запроса. Ожидается, что номер страницы (pageNumber) не меньше 1, переданный номер: {}. Ожидается, что размер страницы (pageSize) не меньше 1. Переданный размер: {}.", pageNumber, pageSize);
+            return FoundPostsDTO.getEmpty();
+        }
 
         final boolean hasPreview = pageNumber > 1;
         final long countPages = postService.getCountPagesForSearchByTitle(search, pageSize);
@@ -42,7 +45,15 @@ public class PostController {
         return new FoundPostsDTO(foundRecords, hasPreview, hasNext, countPages);
     }
 
-
+    @GetMapping("/{id}")
+    @ResponseBody
+    protected PostDTO findPostById(@PathVariable("id") @NotNull final Long id) {
+        if(id < 1) {
+            logger.warn("Некорректный запрос. Уникальный номер поста не может быть ниже 1. Переданный уникальный номер: {}.", id);
+            return PostDTO.getEmpty();
+        }
+        return postService.findById(id).orElse(PostDTO.getEmpty());
+    }
 }
 
 

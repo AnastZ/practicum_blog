@@ -62,34 +62,31 @@ public class PostRepository {
      */
     @Transactional
     public @NotNull List<Post> findAllByStringQuery(@NotNull final String searchString,
-                                                       final int pageNumber,
-                                                       final int pageSize) {
+                                                    final int pageNumber,
+                                                    final int pageSize) {
         if (pageNumber < 0 || pageSize < 1) {
             logger.warn("Переданы некорректные входные данные для поиска постов. Номер страницы (начиная с 0), переданное значение: {}. Количество записей на странице (от 1), переданное значение: {}.", pageNumber, pageSize);
             return Collections.emptyList();
         }
-        final SessionFactory sessionFactory = sessionProvider.getSessionFactory();
-        if (sessionFactory.isClosed()) {
-            logger.error("SessionFactory is close.");
-            return Collections.emptyList();
-        }
-        try (final Session session = sessionFactory.openSession()) {
-            final List<Long> postIds = session.createNamedQuery("getIdsForSearchByTitle", Long.class)
-                    .setParameter("searchString", searchString)
-                    .setPage(Page.page(pageSize, pageNumber))
-                    .getResultList();
-            final List<Post> results = session.createNamedSelectionQuery("searchByTitle", Post.class)
-                    .setParameter("ids", postIds)
-                    .getResultList();
-            return results;
-        } catch (HibernateException he) {
-            logger.error("Error in method {}:{}", "findAllByStringQuery", he.getMessage());
-        }
-        return Collections.emptyList();
+        final SessionWorker<List<Post>> sessionWorker = new SessionWorker<>();
+        final Optional<List<Post>> posts = sessionWorker.workWithSession(sessionProvider.getSessionFactory(),
+                logger,
+                (session) -> {
+                    final List<Long> postIds = session.createNamedQuery("getIdsForSearchByTitle", Long.class)
+                            .setParameter("searchString", searchString)
+                            .setPage(Page.page(pageSize, pageNumber))
+                            .getResultList();
+                    final List<Post> results = session.createNamedSelectionQuery("searchByTitle", Post.class)
+                            .setParameter("ids", postIds)
+                            .getResultList();
+                    return results;
+                });
+        return posts.orElse(Collections.emptyList());
     }
 
     /**
      * Получить пост из БД по его уникальному номеру.
+     *
      * @param id уникальный номер поста.
      * @return найденный пост.
      */
