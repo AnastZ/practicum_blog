@@ -59,7 +59,7 @@ public class PostControllerTest {
         mockMvc.perform(get("/api/posts")
                         .param("search", search)
                         .param("pageNumber", pageNumber)
-                        .param("pageSize", String.valueOf(pageSize))
+                        .param("pageSize", pageSize)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.hasNext").value(true))
