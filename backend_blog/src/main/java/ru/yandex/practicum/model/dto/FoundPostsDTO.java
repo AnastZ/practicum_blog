@@ -41,4 +41,10 @@ public record FoundPostsDTO(@NotNull List<PostDTO> posts,
                 false,
                 1);
     }
+    public static FoundPostsDTO getEmpty(final long lastPage) {
+        return new FoundPostsDTO(Collections.emptyList(),
+                false,
+                false,
+                lastPage);
+    }
 }

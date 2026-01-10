@@ -42,9 +42,12 @@ public class PostController {
             logger.warn("Неккоректные данные запроса. Ожидается, что номер страницы (pageNumber) не меньше 1, переданный номер: {}. Ожидается, что размер страницы (pageSize) не меньше 1. Переданный размер: {}.", pageNumber, pageSize);
             return FoundPostsDTO.getEmpty();
         }
-
-        final boolean hasPreview = pageNumber > 1;
         final long countPages = postService.getCountPagesForSearchByTitle(search, pageSize);
+        if(pageNumber > countPages) {
+            logger.warn("Запрашиваемый номер страницы ({}) постов больше количества страниц ({}).",  pageNumber, countPages);
+            return FoundPostsDTO.getEmpty(countPages);
+        }
+        final boolean hasPreview = pageNumber > 1;
         final boolean hasNext = pageNumber < countPages;
         final List<PostDTO> foundRecords = postService.searchAllByTitle(search, pageNumber, pageSize);
         return new FoundPostsDTO(foundRecords, hasPreview, hasNext, countPages);
@@ -62,9 +65,7 @@ public class PostController {
             logger.warn("Некорректный запрос. Уникальный номер поста не может быть ниже 1. Переданный уникальный номер: {}.", id);
             return PostDTO.getEmpty();
         }
-        final PostDTO dto = postService.findById(id).orElse(PostDTO.getEmpty());
-        System.out.println(dto.toString());
-        return dto;
+        return postService.findById(id).orElse(PostDTO.getEmpty());
     }
 
     @PostMapping

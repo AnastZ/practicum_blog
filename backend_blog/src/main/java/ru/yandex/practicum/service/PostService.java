@@ -79,6 +79,12 @@ public class PostService {
     public Optional<PostDTO> findById(@NotNull final Long id) {
         return postRepository.findById(id).flatMap(dtoMapper::toDTO);
     }
+
+    /**
+     * Сохранить
+     * @param addingPost
+     * @return
+     */
     @Transactional
     public PostDTO savePost(@NotNull final AddingPostDTO addingPost) {
         final List<Tag> tags = tagService.findByNames(addingPost.tags());

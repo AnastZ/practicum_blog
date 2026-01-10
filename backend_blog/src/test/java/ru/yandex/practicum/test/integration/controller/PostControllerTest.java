@@ -4,6 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
@@ -19,6 +22,7 @@ import ru.yandex.practicum.test.integration.IntegrationConfig;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -33,6 +37,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebAppConfiguration
 @TestPropertySource(locations = "classpath:test-application.properties")
 public class PostControllerTest {
+    private final String pathToController = "/api/posts";
+
     @Autowired
     private WebApplicationContext wac;
     private MockMvc mockMvc;
@@ -41,28 +47,47 @@ public class PostControllerTest {
     void setup() {
         mockMvc = MockMvcBuilders.webAppContextSetup(wac).build();
     }
+
     final static String[] requiredPostFields = {"id", "title", "text", "tags", "likesCount", "commentsCount"};
 
-    @Test
-    void searchPosts_isOk() throws Exception {
-        final String path = "/api/posts";
-        final String search = "111";
-        final String pageNumber = "1";
-        final String pageSize = "3";
-        final String[] requiredPostFields = {"id", "title", "text", "tags", "likesCount", "commentsCount"};
+    /**
+     * Проверка, что возвращаемый статус ответа 200.
+     *
+     * @param search поисковой запрос по наименованию поста.
+     * @param pageNumber номер страницы.
+     * @param pageSize количество постов на странице.
+     * @throws Exception
+     */
+    @ParameterizedTest
+    @CsvSource({
+            "111, 1, 3"
+    })
+    void searchPosts_isOk(final Integer search,
+                          final Integer pageNumber,
+                          final Integer pageSize) throws Exception {
 
-        final ResultActions resultActions = mockMvc.perform(get(path)
-                        .param("search", search)
-                        .param("pageNumber", pageNumber)
-                        .param("pageSize", pageSize)
+        final ResultActions resultActions = mockMvc.perform(get(pathToController)
+                        .param("search", search.toString())
+                        .param("pageNumber", pageNumber.toString())
+                        .param("pageSize", pageSize.toString())
                         .accept(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.hasPrev").value(false))
-                .andExpect(jsonPath("$.posts.length()").value(lessThanOrEqualTo(3)))
-                .andExpect(jsonPath("$.posts[?(@.text.length() > 131 || @.text.length() == 0)]").isEmpty());
-
+                .andExpect(jsonPath("$.posts").exists())
+                .andExpect(jsonPath("$.posts").isArray())
+                .andExpect(jsonPath("$.hasPrev").exists())
+                .andExpect(jsonPath("$.hasNext").exists())
+                .andExpect(jsonPath("$.lastPage").exists())
+                .andExpect(jsonPath("$.hasPrev").value(pageNumber > 1))
+                .andExpect(jsonPath("$.hasNext").value(pageNumber < pageSize))
+                .andExpect(jsonPath("$.lastPage").value(greaterThanOrEqualTo(pageNumber)))
+                .andExpect(jsonPath("$.posts.length()").value(lessThanOrEqualTo(pageSize)))
+                .andExpect(jsonPath("$.posts[?(@.text.length() > 131)]").isEmpty())
+                .andExpect(jsonPath("$[?(" +
+                        "(@.hasNext == true && @.posts.length() == " + pageSize + ") || " +
+                        "(@.hasNext == false && @.posts.length() <= " + pageSize + ")" +
+                        ")]").exists());
         Arrays.stream(requiredPostFields).forEach(field -> {
             try {
                 resultActions.andExpect(jsonPath("$.posts[*]." + field).value(everyItem(notNullValue())));
@@ -70,20 +95,17 @@ public class PostControllerTest {
                 throw new RuntimeException(e);
             }
         });
-
-        mockMvc.perform(get(path)
-                        .param("search", search)
-                        .param("pageNumber", pageNumber)
-                        .param("pageSize", pageSize)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.hasNext").value(true))
-                .andExpect(jsonPath("$.posts.length()").value(pageSize));
     }
 
-    @Test
-    void searchSinglePosts_isOk() throws Exception {
-        final String path = "/api/posts/1";
+    /**
+     * Поиск поста но уникальному номеру.
+     * @param postId уникальный номер поста.
+     * @throws Exception
+     */
+    @ParameterizedTest
+    @ValueSource(ints =  {1, 2, 3, 4, 5, 6, 7})
+    void searchSinglePosts_isOk(final int postId) throws Exception {
+        final String path = pathToController + postId;
 
         final ResultActions rs = mockMvc.perform(get(path)
                         .accept(MediaType.APPLICATION_JSON))
@@ -98,15 +120,19 @@ public class PostControllerTest {
             }
         });
     }
+
+    /**
+     * Сохранение поста.
+     * @throws Exception
+     */
     @Test
     void savePost_isOk() throws Exception {
-        final String path = "/api/posts";
         final AddingPostDTO post = new AddingPostDTO("Название поста 3",
                 "Текст поста в формате Markdown...",
                 List.of("tag1", "tag2"));
         final ObjectMapper mapper = new ObjectMapper();
 
-        final ResultActions rs = mockMvc.perform(post(path)
+        final ResultActions rs = mockMvc.perform(post(pathToController)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(post)))
@@ -120,5 +146,12 @@ public class PostControllerTest {
                 throw new RuntimeException(e);
             }
         });
+        rs.andExpect(jsonPath("$.likesCount").value(0))
+                .andExpect(jsonPath("$.commentsCount").value(0))
+                .andExpect(jsonPath("$.title").value(post.title()))
+                .andExpect(jsonPath("$.text").value(post.text()))
+                .andExpect(jsonPath("$.tags").isArray())
+                .andExpect(jsonPath("$.tags.length()").value(post.tags().size()))
+                .andExpect(jsonPath("$.tags", containsInAnyOrder(post.tags().toArray())));
     }
 }
