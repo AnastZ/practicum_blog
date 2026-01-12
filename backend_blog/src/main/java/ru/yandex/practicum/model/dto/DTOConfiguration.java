@@ -6,11 +6,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import ru.yandex.practicum.model.DTOMapper;
+import ru.yandex.practicum.model.DTOToEntityMapper;
 import ru.yandex.practicum.model.entity.Post;
 import ru.yandex.practicum.model.entity.Tag;
 
 import javax.swing.text.html.Option;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -22,23 +24,52 @@ public class DTOConfiguration {
         return new DTOMapper<Post, PostDTO>() {
 
             @Override
-            public Optional<Post> toEntity(@NotNull final PostDTO postDTO) {
+            public Post toEntity(@NotNull final PostDTO postDTO) {
                 final List<Tag> tags = postDTO.tags().stream()
                         .map(Tag::new)
                         .toList();
-                return Optional.of(new Post(postDTO.id(), postDTO.title(), postDTO.text(), postDTO.likesCount(), postDTO.commentsCount(), tags));
+                final Post post = new Post(postDTO.title(), postDTO.text(), tags);
+                post.setId(postDTO.id());
+                return post;
             }
 
             @Override
-            public Optional<PostDTO> toDTO(@NotNull final Post entity) {
+            public PostDTO toDTO(@NotNull final Post entity) {
                 final List<String> tags = entity.getTags().stream()
                         .filter(Objects::nonNull)
                         .map(Tag::getName)
                         .toList();
-                return Optional.of(new PostDTO(entity.getId(), entity.getTitle(), entity.getText(), tags, entity.getLikesCount(), entity.getCommentsCount()));
+                return new PostDTO(entity.getId(), entity.getTitle(), entity.getText(), tags, entity.getLikesCount(), entity.getCommentsCount());
             }
         };
 
     }
+/*    @Bean
+    public DTOToEntityMapper<Post, InputPostDTO> getAddingPostDTOMapper() {
 
+        return addingPost -> new Post(addingPost.getTitle(),
+                addingPost.getText(),
+                Collections.emptyList());
+    }*/
+    @Bean
+    public DTOToEntityMapper<Post, InputPostDTO> getUpdatingPostDTOMapper() {
+        return updatingPostDTO -> {
+            final Post post = new Post(updatingPostDTO.getTitle(),
+                    updatingPostDTO.getText(),
+                    Collections.emptyList());
+            if(! updatingPostDTO.getId().equals(0L)){
+                post.setId(updatingPostDTO.getId());
+            }
+            return post;
+        };
+    }
 }
+
+
+
+
+
+
+
+
+

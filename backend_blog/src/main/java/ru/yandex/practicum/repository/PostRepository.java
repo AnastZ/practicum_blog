@@ -1,6 +1,7 @@
 package ru.yandex.practicum.repository;
 
-import jakarta.transaction.Transactional;
+
+import jakarta.persistence.NoResultException;
 import jakarta.validation.*;
 import jakarta.validation.constraints.NotNull;
 
@@ -10,23 +11,31 @@ import org.hibernate.SessionFactory;
 import org.hibernate.query.Page;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.model.dto.PostDTO;
 import ru.yandex.practicum.model.entity.Post;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @Repository
 public class PostRepository {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    private final DbSessionProvider sessionProvider;
+    private final SessionFactory sessionFactory;
 
-    protected PostRepository(@NotNull final DbSessionProvider sessionProvider) {
-        this.sessionProvider = sessionProvider;
+
+    public PostRepository(@NotNull final SessionFactory sessionFactory) {
+        this.sessionFactory = sessionFactory;
+    }
+
+    /** Вспомогательный метод для получения текущей сессии
+    **/
+    private Session getCurrentSession() {
+        return sessionFactory.getCurrentSession();
     }
 
     /**
@@ -35,17 +44,11 @@ public class PostRepository {
      * @param searchString поисковой запрос по наименованию поста.
      * @return количество постов или 0.
      */
-    @Transactional
+    @Transactional(readOnly = true)
     public long getCountRecordInSearchQuery(@NotNull final String searchString) {
-        final SessionWorker<Long> worker = new SessionWorker<Long>();
-        final Optional<Long> result = worker.workWithSession(sessionProvider.getSessionFactory(), logger,
-                s->{
-                    final Long countRecords = s.createNamedQuery("countRecordsForSearchByTitle", Long.class)
-                            .setParameter("searchString", searchString)
-                            .getSingleResult();
-                    return countRecords;
-                });
-        return result.orElse(0L);
+        return getCurrentSession().createNamedQuery("countRecordsForSearchByTitle", Long.class)
+                .setParameter("searchString", searchString)
+                .getSingleResult();
     }
 
     /**
@@ -56,28 +59,26 @@ public class PostRepository {
      * @param pageSize     количество постов на странице.
      * @return результаты поиска по наименованию постов.
      */
-    @Transactional
+    @Transactional(readOnly = true)
     public @NotNull List<Post> findAllByStringQuery(@NotNull final String searchString,
                                                     final int pageNumber,
-                                                    final int pageSize) {
+                                                    final int pageSize) throws Exception{
         if (pageNumber < 0 || pageSize < 1) {
             logger.warn("Переданы некорректные входные данные для поиска постов. Номер страницы (начиная с 0), переданное значение: {}. Количество записей на странице (от 1), переданное значение: {}.", pageNumber, pageSize);
             return Collections.emptyList();
         }
-        final SessionWorker<List<Post>> sessionWorker = new SessionWorker<>();
-        final Optional<List<Post>> posts = sessionWorker.workWithSession(sessionProvider.getSessionFactory(),
-                logger,
-                (session) -> {
-                    final List<Long> postIds = session.createNamedQuery("getIdsForSearchByTitle", Long.class)
-                            .setParameter("searchString", searchString)
-                            .setPage(Page.page(pageSize, pageNumber))
-                            .getResultList();
-                    final List<Post> results = session.createNamedSelectionQuery("searchByTitle", Post.class)
-                            .setParameter("ids", postIds)
-                            .getResultList();
-                    return results;
-                });
-        return posts.orElse(Collections.emptyList());
+
+        final List<Long> postIds = getCurrentSession().createNamedQuery("getIdsForSearchByTitle", Long.class)
+                .setParameter("searchString", searchString)
+                .setPage(Page.page(pageSize, pageNumber))
+                .getResultList();
+        if(postIds.isEmpty()){
+            return Collections.emptyList();
+        }
+        final List<Post> results = getCurrentSession().createNamedSelectionQuery("searchByTitle", Post.class)
+                .setParameter("ids", postIds)
+                .getResultList();
+        return results;
     }
 
     /**
@@ -86,46 +87,46 @@ public class PostRepository {
      * @param id уникальный номер поста.
      * @return найденный пост.
      */
-    public @NotNull Optional<Post> findById(@NotNull final Long id) {
+    @Transactional(readOnly = true)
+    public @NotNull Post findById(@NotNull final Long id) throws Exception {
         if (id < 1) {
-            logger.warn("Передан некорректный уникальный номер для поиска в БД. Переданное значение: {}", id);
-            return Optional.empty();
+            throw new Exception("Передан некорректный уникальный номер для поиска в БД.");
         }
-        final SessionWorker<Post> worker = new SessionWorker<>();
-        return worker.workWithSession(sessionProvider.getSessionFactory(),
-                logger,
-                (session) -> {
-                    return session.createNamedQuery("findSinglePost", Post.class)
-                            .setParameter("id", id).getSingleResult();
-                });
+        return getCurrentSession().createNamedQuery("findSinglePost", Post.class)
+                .setCacheable(false)
+                .setParameter("id", id).getSingleResult();
     }
 
-    public Post save(@NotNull final Post post) {
+    /**
+     * Сохранение нового поста.
+     * @param post сохраняемый пост.
+     * @return новый объект, полученный из метода merge(post).
+     */
+    @Transactional
+    public Post save(@NotNull final Post post) throws Exception {
+        return getCurrentSession().merge(post);
+    }
 
-        return sessionProvider.getSessionFactory().fromTransaction(s->{
-            final Post p = s.merge(post);
-            s.flush();
-            return p;
-        });
-       /* try(ValidatorFactory factory = Validation.buildDefaultValidatorFactory()){
-            final Validator validator = factory.getValidator();
-            final Set<ConstraintViolation<Post>> violations = validator.validate(post);
-            if(! violations.isEmpty()){
-                violations.forEach(violation -> logger.warn(violation.getMessage()));
-                return Optional.empty();
-            }
-            sessionProvider.getSessionFactory().inTransaction(s->{
-                s.persist(post);
-            });
-            return Optional.of(post);
-        }catch (ValidationException e){
-            logger.error(e.getMessage());
+    /**
+     * Удалить пост из БД по его уникальному номеру.
+     * @param postId уникальный номер поста.
+     * @throws Exception если пост с переданным уникальным номером не существует в БД или другие ошибки при работе с БД.
+     */
+    @Transactional(propagation = Propagation.REQUIRED)
+    public void delete(@NotNull final Long postId) throws Exception {
+        if(postId < 1){
+            throw new IllegalArgumentException("Для удаления передан некорректный уникальный номер (< 1).");
         }
-        return Optional.empty();*/
+        final Session session = getCurrentSession();
+        final Post p = session.find(Post.class, postId);
+        if(Objects.isNull(p)){
+            throw new NoResultException("Удаляемого объекта не существует.");
+        }
+        session.remove(p);
+        session.flush();
+        session.clear();
     }
 }
-
-
 
 
 

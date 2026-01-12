@@ -1,7 +1,7 @@
 package ru.yandex.practicum.test.integration.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.hamcrest.Matchers;
+import jakarta.validation.constraints.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -18,15 +18,15 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import ru.yandex.practicum.WebConfig;
 import ru.yandex.practicum.model.dto.AddingPostDTO;
+import ru.yandex.practicum.model.dto.InputPostDTO;
+import ru.yandex.practicum.model.dto.UpdatingPostDTO;
 import ru.yandex.practicum.test.integration.IntegrationConfig;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import static org.hamcrest.Matchers.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -35,7 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         WebConfig.class,
 })
 @WebAppConfiguration
-@TestPropertySource(locations = "classpath:test-application.properties")
+@TestPropertySource(locations = "classpath:application.properties")
 public class PostControllerTest {
     private final String pathToController = "/api/posts";
 
@@ -53,9 +53,9 @@ public class PostControllerTest {
     /**
      * Проверка, что возвращаемый статус ответа 200.
      *
-     * @param search поисковой запрос по наименованию поста.
+     * @param search     поисковой запрос по наименованию поста.
      * @param pageNumber номер страницы.
-     * @param pageSize количество постов на странице.
+     * @param pageSize   количество постов на странице.
      * @throws Exception
      */
     @ParameterizedTest
@@ -99,22 +99,19 @@ public class PostControllerTest {
 
     /**
      * Поиск поста но уникальному номеру.
+     *
      * @param postId уникальный номер поста.
      * @throws Exception
      */
     @ParameterizedTest
-    @ValueSource(ints =  {1, 2, 3, 4, 5, 6, 7})
+    @ValueSource(ints = {1, 2, 3, 4, 5, 6, 7})
     void searchSinglePosts_isOk(final int postId) throws Exception {
-        final String path = pathToController + postId;
 
-        final ResultActions rs = mockMvc.perform(get(path)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(status().isOk())
+        final ResultActions rs = searchSinglePost(postId).andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
         Arrays.stream(requiredPostFields).forEach(field -> {
             try {
-                rs.andExpect(jsonPath("$." + field ).value(notNullValue()));
+                rs.andExpect(jsonPath("$." + field).value(notNullValue()));
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -122,7 +119,24 @@ public class PostControllerTest {
     }
 
     /**
+     * Создание обращения к контроллеру для поиска одного поста по уникальному номеру.
+     * Создание GET запроса, MediaType.APPLICATION_JSON и печать запроса в консоль.
+     * @param postId уникальный номер поста.
+     * @return
+     * @throws Exception
+     */
+    private ResultActions searchSinglePost(final int postId) throws Exception {
+        final String path = pathToController + "/" + postId;
+
+        final ResultActions rs = mockMvc.perform(get(path)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andDo(print());
+        return rs;
+    }
+
+    /**
      * Сохранение поста.
+     *
      * @throws Exception
      */
     @Test
@@ -133,25 +147,62 @@ public class PostControllerTest {
         final ObjectMapper mapper = new ObjectMapper();
 
         final ResultActions rs = mockMvc.perform(post(pathToController)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(post)))
-                .andDo(print())
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(post)));
+        testSaveOrUpdatePost(rs, post)
+                .andExpect(jsonPath("$.likesCount").value(0))
+                .andExpect(jsonPath("$.commentsCount").value(0));
+    }
+
+    /**
+     * Обновление поста.
+     *
+     * @throws Exception
+     */
+    @ParameterizedTest
+    @ValueSource(ints = {1, 2, 3, 4, 5, 6, 7})
+    void updatePost_isOk(final long id) throws Exception {
+        final UpdatingPostDTO post = new UpdatingPostDTO(id,
+                "Название поста 3",
+                "Текст поста в формате Markdown...",
+                List.of("tag1", "tag2"));
+        final ObjectMapper mapper = new ObjectMapper();
+
+        final ResultActions rs = mockMvc.perform(put(pathToController + "/" + id)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(post)));
+        testSaveOrUpdatePost(rs, post);
+    }
+
+    private ResultActions testSaveOrUpdatePost(@NotNull final ResultActions rs,
+                                               @NotNull final InputPostDTO post) throws Exception {
+        rs.andDo(print())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isCreated());
+                .andExpect(status().isOk());
         Arrays.stream(requiredPostFields).forEach(field -> {
             try {
-                rs.andExpect(jsonPath("$." + field ).value(notNullValue()));
+                rs.andExpect(jsonPath("$." + field).value(notNullValue()));
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         });
-        rs.andExpect(jsonPath("$.likesCount").value(0))
-                .andExpect(jsonPath("$.commentsCount").value(0))
-                .andExpect(jsonPath("$.title").value(post.title()))
-                .andExpect(jsonPath("$.text").value(post.text()))
+        rs.andExpect(jsonPath("$.title").value(post.getTitle()))
+                .andExpect(jsonPath("$.text").value(post.getText()))
                 .andExpect(jsonPath("$.tags").isArray())
-                .andExpect(jsonPath("$.tags.length()").value(post.tags().size()))
-                .andExpect(jsonPath("$.tags", containsInAnyOrder(post.tags().toArray())));
+                .andExpect(jsonPath("$.tags.length()").value(post.getTags().size()))
+                .andExpect(jsonPath("$.tags", containsInAnyOrder(post.getTags().toArray())));
+        return rs;
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {1, 2, 3, 4, 5, 6, 7})
+    void deletePost_isOk(final int id) throws Exception {
+        mockMvc.perform(delete(pathToController + "/" + id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andDo(print());
     }
 }

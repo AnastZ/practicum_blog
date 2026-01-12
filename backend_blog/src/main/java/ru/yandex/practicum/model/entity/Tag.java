@@ -17,7 +17,7 @@ public class Tag {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "idtag", nullable = false,  unique = true)
+    @Column(name = "idtag",  unique = true)
     private Long id;
 
     @NotNull
@@ -43,7 +43,7 @@ public class Tag {
     }
 
     public void setName(String name) {
-        this.name = name;
+        this.name = (name != null) ? name.toLowerCase().trim() : null;
     }
 
     @Override

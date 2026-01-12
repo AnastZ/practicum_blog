@@ -35,16 +35,4 @@ public record FoundPostsDTO(@NotNull List<PostDTO> posts,
     public @NotNull List<PostDTO> getPosts() {
         return posts;
     }
-    public static FoundPostsDTO getEmpty() {
-        return new FoundPostsDTO(Collections.emptyList(),
-                false,
-                false,
-                1);
-    }
-    public static FoundPostsDTO getEmpty(final long lastPage) {
-        return new FoundPostsDTO(Collections.emptyList(),
-                false,
-                false,
-                lastPage);
-    }
 }

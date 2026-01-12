@@ -1,9 +1,14 @@
 package ru.yandex.practicum.repository;
 
+import jakarta.annotation.Resource;
 import jakarta.validation.constraints.NotNull;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.model.entity.Tag;
 
 import java.util.Collections;
@@ -15,28 +20,34 @@ public class TagRepository {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    private final DbSessionProvider sessionProvider;
+    private final SessionFactory sessionFactory;
 
-    protected TagRepository(@NotNull final DbSessionProvider sessionProvider) {
-        this.sessionProvider = sessionProvider;
+
+    public TagRepository(@NotNull final SessionFactory sessionFactory) {
+        this.sessionFactory = sessionFactory;
     }
+
+    /** Вспомогательный метод для получения текущей сессии
+     **/
+    private Session getCurrentSession() {
+        return sessionFactory.getCurrentSession();
+    }
+
 
     /**
      * Найти теги по их названию.
      * @param names названия тегов.
      * @return найденные по названию теги.
      */
-    public @NotNull List<Tag> findByNames(@NotNull final List<String> names) {
+    @Transactional(readOnly = true)
+    public @NotNull List<Tag> findByNames(@NotNull final List<String> names) throws Exception {
         if(Objects.isNull(names) || names.isEmpty()){
             return Collections.emptyList();
         }
-        final SessionWorker<List<Tag>> worker = new SessionWorker<>();
-        return worker.workWithSession(sessionProvider.getSessionFactory(), logger,
-                s->{
-                    return s.createNamedQuery("findByNames", Tag.class)
+        var tags = getCurrentSession().createNamedQuery("findByNames", Tag.class)
                             .setParameter("names", names)
                             .getResultList();
-                }).orElse(Collections.emptyList());
+        return tags;
     }
 
     /**
@@ -44,14 +55,14 @@ public class TagRepository {
      * @param tags сохраняемые теги.
      * @return сохранённые теги или пестой список.
      */
-    public @NotNull List<Tag> saveAll(@NotNull final List<Tag> tags) {
+    @Transactional
+    public @NotNull List<Tag> saveAll(@NotNull final List<Tag> tags) throws Exception{
         if(tags.isEmpty() || tags.stream().anyMatch(Objects::isNull)){
             return Collections.emptyList();
         }
-        sessionProvider.getSessionFactory().inTransaction(s->{
-            tags.forEach(t->s.persist(t));
-            s.flush();
-        });
+        final Session session = getCurrentSession();
+        tags.forEach(session::persist);
+        session.flush();
         return tags;
     }
 }

@@ -1,15 +1,8 @@
 package ru.yandex.practicum.test.integration;
 
 
-import jakarta.validation.constraints.NotNull;
-import org.hibernate.SessionFactory;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
-import ru.yandex.practicum.model.entity.Comment;
-import ru.yandex.practicum.model.entity.Post;
-import ru.yandex.practicum.repository.DbSessionProvider;
 
 @Configuration
 @ComponentScan(basePackages = {"ru.yandex.practicum"})

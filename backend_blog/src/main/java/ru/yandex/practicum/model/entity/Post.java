@@ -30,7 +30,9 @@ import java.util.Objects;
                 query = " SELECT p " +
                         " FROM Post p " +
                         " LEFT JOIN FETCH p.tags " +
-                        " WHERE p.id = :id")
+                        " WHERE p.id = :id"),
+        @NamedQuery(name="deleteById",
+        query = "DELETE FROM Post p WHERE p.id = :id")
 })
 @Entity
 public class Post {
@@ -51,17 +53,18 @@ public class Post {
     private String text;
 
     @Column(name = "likes_count", nullable = false)
-    @NotNull
     @Min(value = 0, message = "Число лайков не может быть ниже нуля.")
+    @NotNull
     private Long likesCount;
 
     @Column(name = "created_date", nullable = false)
+    @NotNull
     private LocalDate createdDate;
 
-    @Formula(value = "SELECT COUNT(*) FROM comment c WHERE c.idpost = idpost")
+    @Formula(value = "(SELECT COUNT(*) FROM comment c WHERE c.idpost = idpost)")
     private Long commentsCount;
 
-    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH})
+    @ManyToMany(cascade = {CascadeType.MERGE, CascadeType.REFRESH})
     @JoinTable(
             name = "post_tags",
             joinColumns = { @JoinColumn(name = "idpost") },
@@ -79,30 +82,14 @@ public class Post {
     }
     public Post(@NotNull final String title,
                 @NotNull final String text,
-                @NotNull final Long likesCount,
-                @NotNull final Long commentsCount,
-                @NotNull final LocalDate date,
                 @NotNull final List<Tag> tags) {
 
         this.title = title;
         this.text = text;
-        this.createdDate = date;
-        this.likesCount = likesCount;
-        this.commentsCount = commentsCount;
         this.tags = tags;
-    }
-    public Post(@NotNull final Long id,
-                @NotNull final String title,
-                @NotNull final String text,
-                @NotNull final Long likesCount,
-                @NotNull final Long commentsCount,
-                @NotNull final List<Tag> tags) {
-        this.id = id;
-        this.title = title;
-        this.text = text;
-        this.likesCount = likesCount;
-        this.commentsCount = commentsCount;
-        this.tags = tags;
+        this.likesCount = 0L;
+        this.createdDate = LocalDate.now();
+        this.commentsCount = 0L;
     }
 
     public void setId(Long id) {
@@ -151,6 +138,10 @@ public class Post {
 
     public Long getCommentsCount() {
         return commentsCount;
+    }
+
+    public void setCommentsCount(Long commentsCount) {
+        this.commentsCount = commentsCount;
     }
 
     @Override

@@ -34,13 +34,4 @@ public record PostDTO(Long id,
     public @NotNull List<String> getTags() {
         return tags;
     }
-
-    public static @NotNull PostDTO getEmpty(){
-        return new PostDTO(-1L,
-                "",
-                "",
-                Collections.emptyList(),
-                0L,
-                0L);
-    }
 }

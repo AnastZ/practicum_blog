@@ -4,7 +4,5 @@ import ru.yandex.practicum.model.dto.PostDTO;
 
 import java.util.Optional;
 
-public interface DTOMapper<T, DTO> {
-    Optional<T> toEntity(DTO dto);
-    Optional<DTO> toDTO(T entity);
+public interface DTOMapper<T, DTO> extends EntityToDTOMapper<T, DTO>, DTOToEntityMapper<T, DTO> {
 }

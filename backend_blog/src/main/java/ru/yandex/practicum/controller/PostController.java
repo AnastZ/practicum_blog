@@ -9,12 +9,11 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.model.dto.AddingPostDTO;
 import ru.yandex.practicum.model.dto.FoundPostsDTO;
 import ru.yandex.practicum.model.dto.PostDTO;
-import ru.yandex.practicum.model.entity.Post;
+import ru.yandex.practicum.model.dto.UpdatingPostDTO;
 import ru.yandex.practicum.service.PostService;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/posts")
@@ -37,15 +36,14 @@ public class PostController {
     @ResponseBody
     protected FoundPostsDTO searchPosts(@RequestParam("search") final String search,
                                         @RequestParam("pageNumber") final int pageNumber,
-                                        @RequestParam("pageSize")  final int pageSize) {
+                                        @RequestParam("pageSize")  final int pageSize) throws Exception {
         if(Objects.isNull(search) || pageNumber < 1 || pageSize < 1) {
-            logger.warn("Неккоректные данные запроса. Ожидается, что номер страницы (pageNumber) не меньше 1, переданный номер: {}. Ожидается, что размер страницы (pageSize) не меньше 1. Переданный размер: {}.", pageNumber, pageSize);
-            return FoundPostsDTO.getEmpty();
+            throw new IllegalArgumentException("Неккоректные данные запроса. Ожидается, что номер страницы (pageNumber) не меньше 1, переданный номер: " + pageNumber +
+                    ". Ожидается, что размер страницы (pageSize) не меньше 1. Переданный размер: " + pageSize + ".");
         }
         final long countPages = postService.getCountPagesForSearchByTitle(search, pageSize);
         if(pageNumber > countPages) {
-            logger.warn("Запрашиваемый номер страницы ({}) постов больше количества страниц ({}).",  pageNumber, countPages);
-            return FoundPostsDTO.getEmpty(countPages);
+            throw new IllegalArgumentException("Запрашиваемый номер страницы постов больше количества страниц.");
         }
         final boolean hasPreview = pageNumber > 1;
         final boolean hasNext = pageNumber < countPages;
@@ -54,26 +52,51 @@ public class PostController {
     }
 
     /**
+     * Если id некорректно, то вернуть true.
+     * @param id уникальный номер поста.
+     * @return true, если переданный уникальный номер поста некорректный.
+     */
+    private void validatePostIdIsFalse(final Long id) {
+        if(Objects.isNull(id) || id < 1) {
+            throw new IllegalArgumentException("Некорректный запрос. Уникальный номер поста не может быть ниже 1.");
+        }
+    }
+    /**
      * Найти пост по уникальному номеру.
      * @param id уникальные номер поста (больше 0)
      * @return найденный пост.
      */
     @GetMapping("/{id}")
     @ResponseBody
-    protected PostDTO findPostById(@PathVariable("id") final Long id) {
-        if(Objects.isNull(id) || id < 1) {
-            logger.warn("Некорректный запрос. Уникальный номер поста не может быть ниже 1. Переданный уникальный номер: {}.", id);
-            return PostDTO.getEmpty();
-        }
-        return postService.findById(id).orElse(PostDTO.getEmpty());
+    protected PostDTO findPostById(@PathVariable("id") final Long id) throws Exception {
+        validatePostIdIsFalse(id);
+        return postService.findByIdAndGetDTO(id);
     }
 
     @PostMapping
     @ResponseBody
-    @ResponseStatus(HttpStatus.CREATED)
-    protected PostDTO savePost(@RequestBody final AddingPostDTO post) {
+    protected PostDTO savePost(@RequestBody final AddingPostDTO post) throws Exception {
         return postService.savePost(post);
+    }
 
+    @PutMapping("/{id}")
+    @ResponseBody
+    protected PostDTO updatePost(@PathVariable("id") final Long id,
+                               @RequestBody final UpdatingPostDTO post) throws Exception {
+        validatePostIdIsFalse(id);
+        if(! post.getId().equals(id)) {
+            throw new IllegalArgumentException("Данные переданные в параметре запроса и тело не совпадают.");
+        }
+        return postService.updatePost(post);
+    }
+
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
+    protected void deletePost(@PathVariable("id") final Long id) throws Exception {
+        validatePostIdIsFalse(id);
+        postService.deletePost(id);
     }
 }
 

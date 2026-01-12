@@ -1,12 +1,14 @@
 package ru.yandex.practicum.model.dto;
 
+import jakarta.validation.constraints.NotNull;
 
 import java.util.List;
 
-public record AddingPostDTO(String title, String text, List<String> tags) implements InputPostDTO {
+public record UpdatingPostDTO(Long id, String title, String text, List<String> tags) implements InputPostDTO{
+
     @Override
     public Long getId() {
-        return 0L;
+        return id;
     }
 
     @Override
