@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import ru.yandex.practicum.model.DTOMapper;
 import ru.yandex.practicum.model.DTOToEntityMapper;
+import ru.yandex.practicum.model.entity.Comment;
 import ru.yandex.practicum.model.entity.Post;
 import ru.yandex.practicum.model.entity.Tag;
 
@@ -16,6 +17,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+
 @Configuration
 public class DTOConfiguration {
 
@@ -44,23 +46,36 @@ public class DTOConfiguration {
         };
 
     }
-/*    @Bean
-    public DTOToEntityMapper<Post, InputPostDTO> getAddingPostDTOMapper() {
 
-        return addingPost -> new Post(addingPost.getTitle(),
-                addingPost.getText(),
-                Collections.emptyList());
-    }*/
     @Bean
     public DTOToEntityMapper<Post, InputPostDTO> getUpdatingPostDTOMapper() {
         return updatingPostDTO -> {
             final Post post = new Post(updatingPostDTO.getTitle(),
                     updatingPostDTO.getText(),
                     Collections.emptyList());
-            if(! updatingPostDTO.getId().equals(0L)){
+            if (!updatingPostDTO.getId().equals(0L)) {
                 post.setId(updatingPostDTO.getId());
             }
             return post;
+        };
+    }
+    @Bean
+    public DTOMapper<Comment, CommentDTO> getCommentDTOMapper() {
+        return new DTOMapper<Comment, CommentDTO>() {
+            @Override
+            public CommentDTO toDTO(@NotNull final Comment comment) {
+                final Long id = comment.getId();
+                return new CommentDTO(Objects.isNull(id) ? 0L : id, comment.getText(), comment.getPost().getId());
+            }
+
+            @Override
+            public Comment toEntity(@NotNull final CommentDTO commentDTO) {
+                final Comment c = new Comment(commentDTO.text());
+                if(! commentDTO.id().equals(0L)){
+                    c.setId(commentDTO.id());
+                }
+                return c;
+            }
         };
     }
 }

@@ -10,7 +10,7 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 @ComponentScan(basePackages = "ru.yandex.practicum")
 //@EnableJpaRepositories(basePackages = "ru.yandex.practicum.repository")
 @PropertySource("classpath:application.properties")
-@PropertySource("classpath:hibernate.properties")
+@PropertySource("classpath:content.properties")
 public class WebConfig {
 
 

@@ -21,9 +21,12 @@ import javax.sql.DataSource;
 
 public class HibernateConfig {
     @Autowired
-    private Environment env; // Spring Environment для доступа к application.properties
+    private Environment env;
 
-    // --- 1. Настройка DataSource (источника данных) ---
+    /** Настройка DataSource (источника данных).
+     *
+     * @return
+     */
     @Bean
     public DataSource dataSource() {
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
@@ -34,7 +37,10 @@ public class HibernateConfig {
         return dataSource;
     }
 
-    // --- 2. Настройка SessionFactory (фабрики сессий Hibernate) ---
+    /** Настройка SessionFactory (фабрики сессий Hibernate).
+     *
+     * @return
+     */
     @Bean
     public LocalSessionFactoryBean sessionFactory() {
         LocalSessionFactoryBean sessionFactory = new LocalSessionFactoryBean();
@@ -44,7 +50,10 @@ public class HibernateConfig {
         return sessionFactory;
     }
 
-    // --- 3. Свойства Hibernate ---
+    /** Свойства Hibernate
+     *
+     * @return
+     */
     private Properties hibernateProperties() {
         Properties properties = new Properties();
         properties.setProperty("hibernate.dialect", env.getProperty("spring.jpa.database-platform"));
@@ -63,6 +72,11 @@ public class HibernateConfig {
         return properties;
     }
 
+    /**
+     * Менеджер транзакций. Для того, чтобы Spring сам создавал транзакцию, если метод отмечен аннотацией org.springframework.transaction.annotation.Transactional.
+     * @param sessionFactory
+     * @return
+     */
     @Bean
     public HibernateTransactionManager transactionManager(SessionFactory sessionFactory) {
         HibernateTransactionManager transactionManager = new HibernateTransactionManager();

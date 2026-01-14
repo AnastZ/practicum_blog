@@ -15,7 +15,8 @@ CREATE TABLE post (
                       title VARCHAR(45) NOT NULL,
                       text VARCHAR(2000) NOT NULL,
                       likes_count INT NOT NULL DEFAULT 0,
-                      created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+                      created_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    image_path VARCHAR(500)
 );
 
 -- Уникальный индекс для заголовка

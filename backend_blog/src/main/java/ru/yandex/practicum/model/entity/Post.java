@@ -31,8 +31,12 @@ import java.util.Objects;
                         " FROM Post p " +
                         " LEFT JOIN FETCH p.tags " +
                         " WHERE p.id = :id"),
-        @NamedQuery(name="deleteById",
-        query = "DELETE FROM Post p WHERE p.id = :id")
+        @NamedQuery(name="incrementLikes",
+        query = "UPDATE Post p SET p.likesCount = p.likesCount + 1 WHERE p.id = :id"),
+        @NamedQuery(name = "getCountLikes",
+        query = "SELECT p.likesCount FROM Post p WHERE p.id = :id"),
+        @NamedQuery(name = "getImagePath",
+        query = "SELECT p.imagePath FROM Post p WHERE p.id = :id")
 })
 @Entity
 public class Post {
@@ -73,6 +77,8 @@ public class Post {
     @OrderBy("name")
     private List<Tag> tags;
 
+    @Column(name = "image_path", length = 500)
+    private String imagePath;
 
     public Long getId() {
         return id;
@@ -142,6 +148,14 @@ public class Post {
 
     public void setCommentsCount(Long commentsCount) {
         this.commentsCount = commentsCount;
+    }
+
+    public String getImagePath() {
+        return imagePath;
+    }
+
+    public void setImagePath(String imagePath) {
+        this.imagePath = imagePath;
     }
 
     @Override

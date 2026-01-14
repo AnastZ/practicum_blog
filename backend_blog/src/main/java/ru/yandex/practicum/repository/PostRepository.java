@@ -2,6 +2,7 @@ package ru.yandex.practicum.repository;
 
 
 import jakarta.persistence.NoResultException;
+import jakarta.persistence.NonUniqueResultException;
 import jakarta.validation.*;
 import jakarta.validation.constraints.NotNull;
 
@@ -18,6 +19,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.model.dto.PostDTO;
 import ru.yandex.practicum.model.entity.Post;
+import ru.yandex.practicum.util.EntityValidator;
 
 import java.util.*;
 
@@ -26,10 +28,11 @@ public class PostRepository {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final SessionFactory sessionFactory;
+    private final EntityValidator<Long> postIdValidator;
 
-
-    public PostRepository(@NotNull final SessionFactory sessionFactory) {
+    public PostRepository(@NotNull final SessionFactory sessionFactory, EntityValidator<Long> postIdValidator) {
         this.sessionFactory = sessionFactory;
+        this.postIdValidator = postIdValidator;
     }
 
     /** Вспомогательный метод для получения текущей сессии
@@ -80,7 +83,11 @@ public class PostRepository {
                 .getResultList();
         return results;
     }
-
+    private void validatePostId(@NotNull final Long id) throws IllegalArgumentException {
+        if (id < 1) {
+            throw new IllegalArgumentException("Передан некорректный уникальный номер поста.");
+        }
+    }
     /**
      * Получить пост из БД по его уникальному номеру.
      *
@@ -88,10 +95,8 @@ public class PostRepository {
      * @return найденный пост.
      */
     @Transactional(readOnly = true)
-    public @NotNull Post findById(@NotNull final Long id) throws Exception {
-        if (id < 1) {
-            throw new Exception("Передан некорректный уникальный номер для поиска в БД.");
-        }
+    public @NotNull Post findById(@NotNull final Long id) throws NoResultException, NonUniqueResultException {
+        validatePostId(id);
         return getCurrentSession().createNamedQuery("findSinglePost", Post.class)
                 .setCacheable(false)
                 .setParameter("id", id).getSingleResult();
@@ -114,9 +119,7 @@ public class PostRepository {
      */
     @Transactional(propagation = Propagation.REQUIRED)
     public void delete(@NotNull final Long postId) throws Exception {
-        if(postId < 1){
-            throw new IllegalArgumentException("Для удаления передан некорректный уникальный номер (< 1).");
-        }
+        validatePostId(postId);
         final Session session = getCurrentSession();
         final Post p = session.find(Post.class, postId);
         if(Objects.isNull(p)){
@@ -125,6 +128,60 @@ public class PostRepository {
         session.remove(p);
         session.flush();
         session.clear();
+    }
+
+    /**
+     * Инкремент количества лайков для поста с переданным уникальным номером.
+     * @param postId уникальный номер поста.
+     * @return инкрементированное количество постов.
+     * @throws Exception
+     */
+    @Transactional
+    public Long incrementLikes(@NotNull final Long postId) throws Exception {
+        validatePostId(postId);
+        final Session session = getCurrentSession();
+        session.createNamedQuery("incrementLikes")
+                .setParameter("id", postId)
+                .executeUpdate();
+        session.flush();
+        return session.createNamedQuery("getCountLikes",  Long.class)
+                .setParameter("id", postId)
+                .getSingleResult();
+    }
+
+    /**
+     * Обновить путь к изображению поста.
+     * @param postId уникальный номер поста.
+     * @param imagePath новый путь к картинке.
+     * @throws Exception
+     */
+    @Transactional
+    public void updatePostImagePath(@NotNull final Long postId,
+                                    @NotNull final String imagePath) throws Exception {
+        validatePostId(postId);
+        final Session session = getCurrentSession();
+        final Post p = session.find(Post.class, postId);
+        if(Objects.isNull(p)){
+            throw new NoResultException("Поста не существует.");
+        }
+        p.setImagePath(imagePath);
+        session.persist(p);
+        session.flush();
+    }
+
+    /**
+     * Получить путь до изображения поста.
+     * @param postId уникальный номер поста.
+     * @return путь к картинке.
+     * @throws Exception
+     */
+    @Transactional(readOnly = true)
+    public String getImagePath(@NotNull final Long postId) throws Exception {
+        validatePostId(postId);
+        final Session session = getCurrentSession();
+        return session.createNamedQuery("getImagePath", String.class)
+                .setParameter("id", postId)
+                .getSingleResult();
     }
 }
 

@@ -5,7 +5,12 @@ import jakarta.validation.constraints.NotNull;
 
 import java.util.Objects;
 
-
+@NamedQueries({
+        @NamedQuery(name = "getCommentsByPostId",
+        query = "SELECT c FROM Comment c WHERE c.post.id = :postId"),
+        @NamedQuery(name = "getCommentByIdAndPostId",
+        query = "SELECT c FROM Comment c WHERE c.id = :commentId AND c.post.id = :postId")
+})
 @Entity
 public class Comment {
     @Id
@@ -17,8 +22,8 @@ public class Comment {
     private String text;
 
     @NotNull
-    @JoinColumn(name = "idpost", nullable = false, insertable = false, updatable = false)
-    @ManyToOne
+    @JoinColumn(name = "idpost", nullable = false, updatable = false)
+    @ManyToOne(targetEntity =  Post.class)
     private Post post;
 
     public Long getId() {
@@ -43,6 +48,12 @@ public class Comment {
 
     public void setPost(Post post) {
         this.post = post;
+    }
+
+    protected Comment(){}
+
+    public Comment(@NotNull final String text) {
+        this.text = text;
     }
 
     @Override

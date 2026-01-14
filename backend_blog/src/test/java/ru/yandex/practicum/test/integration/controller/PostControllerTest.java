@@ -20,12 +20,15 @@ import ru.yandex.practicum.WebConfig;
 import ru.yandex.practicum.model.dto.AddingPostDTO;
 import ru.yandex.practicum.model.dto.InputPostDTO;
 import ru.yandex.practicum.model.dto.UpdatingPostDTO;
+import ru.yandex.practicum.model.entity.Post;
 import ru.yandex.practicum.test.integration.IntegrationConfig;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -37,7 +40,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebAppConfiguration
 @TestPropertySource(locations = "classpath:application.properties")
 public class PostControllerTest {
-    private final String pathToController = "/api/posts";
+    private static final String pathToController = "/api/posts";
+
+    private static String getPathForId(final long id){
+        return pathToController + "/" + id;
+    }
 
     @Autowired
     private WebApplicationContext wac;
@@ -46,9 +53,10 @@ public class PostControllerTest {
     @BeforeEach
     void setup() {
         mockMvc = MockMvcBuilders.webAppContextSetup(wac).build();
+
     }
 
-    final static String[] requiredPostFields = {"id", "title", "text", "tags", "likesCount", "commentsCount"};
+    final static Set<String> requiredPostFields = Set.of("id", "title", "text", "tags", "likesCount", "commentsCount");
 
     /**
      * Проверка, что возвращаемый статус ответа 200.
@@ -88,7 +96,7 @@ public class PostControllerTest {
                         "(@.hasNext == true && @.posts.length() == " + pageSize + ") || " +
                         "(@.hasNext == false && @.posts.length() <= " + pageSize + ")" +
                         ")]").exists());
-        Arrays.stream(requiredPostFields).forEach(field -> {
+        requiredPostFields.forEach(field -> {
             try {
                 resultActions.andExpect(jsonPath("$.posts[*]." + field).value(everyItem(notNullValue())));
             } catch (Exception e) {
@@ -109,7 +117,7 @@ public class PostControllerTest {
 
         final ResultActions rs = searchSinglePost(postId).andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
-        Arrays.stream(requiredPostFields).forEach(field -> {
+        requiredPostFields.forEach(field -> {
             try {
                 rs.andExpect(jsonPath("$." + field).value(notNullValue()));
             } catch (Exception e) {
@@ -126,10 +134,12 @@ public class PostControllerTest {
      * @throws Exception
      */
     private ResultActions searchSinglePost(final int postId) throws Exception {
-        final String path = pathToController + "/" + postId;
 
-        final ResultActions rs = mockMvc.perform(get(path)
-                        .accept(MediaType.APPLICATION_JSON))
+
+        final ResultActions rs = mockMvc.perform(get(getPathForId(postId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .characterEncoding("utf-8"))
                 .andDo(print());
         return rs;
     }
@@ -151,6 +161,7 @@ public class PostControllerTest {
                 .accept(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(post)));
         testSaveOrUpdatePost(rs, post)
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.likesCount").value(0))
                 .andExpect(jsonPath("$.commentsCount").value(0));
     }
@@ -169,19 +180,39 @@ public class PostControllerTest {
                 List.of("tag1", "tag2"));
         final ObjectMapper mapper = new ObjectMapper();
 
-        final ResultActions rs = mockMvc.perform(put(pathToController + "/" + id)
+        final ResultActions rs = mockMvc.perform(put(getPathForId(id))
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(post)));
-        testSaveOrUpdatePost(rs, post);
+        testSaveOrUpdatePost(rs, post)
+                .andExpect(status().isOk());
+    }
+    /**
+     * Обновление поста. Разные уникальные номера в пути и объекте, должна быть ошибка.
+     *
+     * @throws Exception
+     */
+    @ParameterizedTest
+    @ValueSource(ints = {1, 2, 3, 4, 5, 6, 7})
+    void updatePost_error(final long id) throws Exception {
+        final UpdatingPostDTO post = new UpdatingPostDTO(id+1,
+                "Название поста 3",
+                "Текст поста в формате Markdown...",
+                List.of("tag1", "tag2"));
+        final ObjectMapper mapper = new ObjectMapper();
+
+        final ResultActions rs = mockMvc.perform(put(getPathForId(id))
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(post)))
+                .andExpect(status().isBadRequest());
     }
 
     private ResultActions testSaveOrUpdatePost(@NotNull final ResultActions rs,
                                                @NotNull final InputPostDTO post) throws Exception {
         rs.andDo(print())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-        Arrays.stream(requiredPostFields).forEach(field -> {
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+        requiredPostFields.forEach(field -> {
             try {
                 rs.andExpect(jsonPath("$." + field).value(notNullValue()));
             } catch (Exception e) {
@@ -196,13 +227,64 @@ public class PostControllerTest {
         return rs;
     }
 
+
     @ParameterizedTest
     @ValueSource(ints = {1, 2, 3, 4, 5, 6, 7})
     void deletePost_isOk(final int id) throws Exception {
-        mockMvc.perform(delete(pathToController + "/" + id)
+        mockMvc.perform(delete(getPathForId(id))
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andDo(print());
     }
+    @ParameterizedTest
+    @ValueSource(ints = {1, 2, 3, 4, 5, 6, 7})
+    void incrementLikes_isOk(final int id) throws Exception {
+
+        final String findPost = mockMvc.perform(get(getPathForId(id))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .characterEncoding("utf-8"))
+                .andDo(print())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        final ObjectMapper mapper = new ObjectMapper();
+        final Post post = mapper.readValue(findPost, Post.class);
+        assertNotNull(post);
+        mockMvc.perform(post(getPathForId(id) + "/likes")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(post.getLikesCount()+1));
+    }
+    @ParameterizedTest
+    @ValueSource(ints = {1, 2, 3, 4, 5, 6, 7})
+    void incrementLikes_errorPostNotFound(final int id) throws Exception {
+
+        final String findPost = mockMvc.perform(get(getPathForId(id)  + "/likes")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .characterEncoding("utf-8"))
+                .andDo(print())
+                .andExpect(content().string(notNullValue()))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        assertFalse(findPost.isEmpty());
+        final ObjectMapper mapper = new ObjectMapper();
+        final Post post = mapper.readValue(findPost, Post.class);
+        assertNotNull(post);
+        mockMvc.perform(post(getPathForId(id)  + "/likes")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(post.getLikesCount()+1));
+    }
+
+
+
 }

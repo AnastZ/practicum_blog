@@ -1,27 +1,28 @@
 package ru.yandex.practicum.service;
 
+import jakarta.persistence.NoResultException;
 import jakarta.validation.constraints.NotNull;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import ru.yandex.practicum.model.DTOMapper;
 import ru.yandex.practicum.model.DTOToEntityMapper;
-import ru.yandex.practicum.model.dto.AddingPostDTO;
-import ru.yandex.practicum.model.dto.InputPostDTO;
-import ru.yandex.practicum.model.dto.UpdatingPostDTO;
+import ru.yandex.practicum.model.dto.*;
 import ru.yandex.practicum.model.entity.Post;
 import ru.yandex.practicum.model.entity.Tag;
 import ru.yandex.practicum.model.util.Merger;
 import ru.yandex.practicum.repository.PostRepository;
 import ru.yandex.practicum.repository.Utils;
-import ru.yandex.practicum.model.dto.PostDTO;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.nio.file.NoSuchFileException;
+import java.util.*;
 
 @Service
 public class PostService {
@@ -94,9 +95,12 @@ public class PostService {
      * @return результат поиска.
      */
     @Transactional
-    public Post findById(@NotNull final Long id) throws Exception {
-        return postRepository.findById(id);
-
+    public @NotNull Post findById(@NotNull final Long id) throws Exception {
+        final Post p = postRepository.findById(id);
+        if (Objects.isNull(p)) {
+            throw new NoResultException("Post with id " + id + " does not exist");
+        }
+        return p;
     }
 
     /**
@@ -144,8 +148,34 @@ public class PostService {
         return dtoMapper.toDTO(post);
 
     }
+
+    /**
+     * Удаление поста по уникальному номеру.
+     * @param id уникальный номер поста.
+     * @throws Exception
+     */
     @Transactional
     public void deletePost(@NotNull final Long id) throws Exception {
         postRepository.delete(id);
+    }
+
+    /**
+     * Инкремент количества лайков для поста по уникальному номеру.
+     * @param id уникальный номер поста.
+     * @return инкрементированное количество лайков.
+     * @throws Exception
+     */
+    @Transactional
+    public Long incrementLikes(@NotNull final Long id) throws Exception {
+        return postRepository.incrementLikes(id);
+    }
+    @Transactional
+    public void updatePostImagePath(@NotNull final Long postId,
+                                    @NotNull final String imagePath) throws Exception {
+        postRepository.updatePostImagePath(postId, imagePath);
+    }
+    @Transactional(readOnly = true)
+    public String getImagePath(@NotNull final Long postId) throws Exception {
+        return postRepository.getImagePath(postId);
     }
 }
