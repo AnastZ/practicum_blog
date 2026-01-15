@@ -54,6 +54,7 @@ public class PostService {
      * @param pageSize количество постов на одной странице.
      * @return количество постов относительно переданного количества на одной странице.
      */
+    @Transactional(readOnly = true)
     public long getCountPagesForSearchByTitle(@NotNull final String searchString,
                                               final int pageSize) {
 
@@ -70,6 +71,7 @@ public class PostService {
      * @param pageSize     количество записей на странице.
      * @return результаты поиска в БД по поисковому запросу.
      */
+    @Transactional(readOnly = true)
     public List<PostDTO> searchAllByTitle(@NotNull final String searchString,
                                           final int pageNumber,
                                           final int pageSize) throws Exception {
@@ -94,8 +96,8 @@ public class PostService {
      * @param id уникальный номер поста.
      * @return результат поиска.
      */
-    @Transactional
-    public @NotNull Post findById(@NotNull final Long id) throws Exception {
+    @Transactional(readOnly = true)
+    public @NotNull Post findById(@NotNull final Long id) throws NoResultException {
         final Post p = postRepository.findById(id);
         if (Objects.isNull(p)) {
             throw new NoResultException("Post with id " + id + " does not exist");
@@ -109,6 +111,7 @@ public class PostService {
      * @param id уникальный номер поста.
      * @return
      */
+    @Transactional(readOnly = true)
     public PostDTO findByIdAndGetDTO(@NotNull final Long id) throws Exception {
         return dtoMapper.toDTO(findById(id));
     }
@@ -174,8 +177,5 @@ public class PostService {
                                     @NotNull final String imagePath) throws Exception {
         postRepository.updatePostImagePath(postId, imagePath);
     }
-    @Transactional(readOnly = true)
-    public String getImagePath(@NotNull final Long postId) throws Exception {
-        return postRepository.getImagePath(postId);
-    }
+
 }

@@ -30,7 +30,8 @@ public class PostRepository {
     private final SessionFactory sessionFactory;
     private final EntityValidator<Long> postIdValidator;
 
-    public PostRepository(@NotNull final SessionFactory sessionFactory, EntityValidator<Long> postIdValidator) {
+    public PostRepository(@NotNull final SessionFactory sessionFactory,
+                          @NotNull final EntityValidator<Long> postIdValidator) {
         this.sessionFactory = sessionFactory;
         this.postIdValidator = postIdValidator;
     }
@@ -117,7 +118,7 @@ public class PostRepository {
      * @param postId уникальный номер поста.
      * @throws Exception если пост с переданным уникальным номером не существует в БД или другие ошибки при работе с БД.
      */
-    @Transactional(propagation = Propagation.REQUIRED)
+    @Transactional
     public void delete(@NotNull final Long postId) throws Exception {
         validatePostId(postId);
         final Session session = getCurrentSession();
@@ -126,8 +127,6 @@ public class PostRepository {
             throw new NoResultException("Удаляемого объекта не существует.");
         }
         session.remove(p);
-        session.flush();
-        session.clear();
     }
 
     /**
@@ -169,20 +168,7 @@ public class PostRepository {
         session.flush();
     }
 
-    /**
-     * Получить путь до изображения поста.
-     * @param postId уникальный номер поста.
-     * @return путь к картинке.
-     * @throws Exception
-     */
-    @Transactional(readOnly = true)
-    public String getImagePath(@NotNull final Long postId) throws Exception {
-        validatePostId(postId);
-        final Session session = getCurrentSession();
-        return session.createNamedQuery("getImagePath", String.class)
-                .setParameter("id", postId)
-                .getSingleResult();
-    }
+
 }
 
 

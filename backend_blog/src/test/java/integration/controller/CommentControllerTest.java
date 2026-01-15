@@ -1,25 +1,18 @@
-package ru.yandex.practicum.test.integration.controller;
+package integration.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.hamcrest.Matcher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
-import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
-import ru.yandex.practicum.WebConfig;
 import ru.yandex.practicum.model.dto.CommentDTO;
-import ru.yandex.practicum.test.integration.IntegrationConfig;
 
-import java.util.Arrays;
 import java.util.Set;
 
 import static org.hamcrest.Matchers.*;
@@ -29,13 +22,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
-@SpringJUnitConfig(classes = {
-        IntegrationConfig.class,
-        WebConfig.class,
-})
-@WebAppConfiguration
-@TestPropertySource(locations = "classpath:application.properties")
-public class CommentControllerTest {
+
+public class CommentControllerTest extends AbstractControllerTest {
 
     private static final String pathToController = "/api/posts/%d/comments";
 
@@ -119,7 +107,6 @@ public class CommentControllerTest {
             "2,2"})
     void update(final long postId, final long commentId) throws Exception {
         final CommentDTO comment = new CommentDTO(commentId, "kfkf", postId);
-
         final ObjectMapper mapper = new ObjectMapper();
 
         final ResultActions rs = mockMvc.perform(post(getPathForId(postId))

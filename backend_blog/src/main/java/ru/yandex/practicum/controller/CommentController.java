@@ -23,7 +23,12 @@ public class CommentController {
         this.idValidator = idValidator;
     }
 
-
+    /**
+     * Получить список комментариев, относящихся к посту.
+     * @param postId уникальный номер поста.
+     * @return список найденных комментариев.
+     * @throws Exception
+     */
     @GetMapping
     @ResponseBody
     protected List<CommentDTO> getPostComments(@PathVariable("postId") final Long postId) throws Exception {
@@ -31,6 +36,13 @@ public class CommentController {
         return commentService.getComments(postId);
     }
 
+    /**
+     * Получить комментарий по id и id поста.
+     * @param postId уникальный номер поста.
+     * @param commentId уникальный номер комментария.
+     * @return найденный комментарий.
+     * @throws Exception
+     */
     @GetMapping("/{commentId}")
     @ResponseBody
     protected CommentDTO getPostComment(@PathVariable("postId") final Long postId,
@@ -39,6 +51,13 @@ public class CommentController {
         return commentService.getCommentsByPostId(postId, commentId);
     }
 
+    /**
+     * Сохранить новый комментарий.
+     * @param postId уникальный номер поста.
+     * @param dto комментарий.
+     * @return сохранённый комментарий.
+     * @throws Exception
+     */
     @PostMapping
     @ResponseBody
     protected CommentDTO save(@PathVariable("postId") final Long postId,
@@ -47,20 +66,38 @@ public class CommentController {
         return commentService.save(dto);
     }
 
+    /**
+     * Изменить существующий комментарий.
+     * @param postId уникальный номер поста.
+     * @param commentId униклаьный номер комментария.
+     * @param dto объект с новыми данными комментария.
+     * @return сохранённый комментарий.
+     * @throws Exception
+     */
     @PutMapping("/{commentId}")
     @ResponseBody
     protected CommentDTO update(@PathVariable("postId") final Long postId,
                                 @PathVariable("commentId") final Long commentId,
                                 @RequestBody final CommentDTO dto) throws Exception {
         idValidator.validate(postId);
+        idValidator.validate(commentId);
+        if(! commentId.equals(dto.id())){
+            throw new IllegalArgumentException("commentId and postId do not match.");
+        }
         return commentService.save(dto);
     }
 
+    /**
+     * Удалить комментарий.
+     * @param postId уникальный номер поста.
+     * @param commentId уникальный номер комментария.
+     * @throws Exception
+     */
     @DeleteMapping("/{commentId}")
     @ResponseStatus(HttpStatus.OK)
     protected void delete(@PathVariable("postId") final Long postId,
                           @PathVariable("commentId") final Long commentId) throws Exception {
         idValidator.validate(postId);
-        commentService.delete(postId);
+        commentService.delete(postId, commentId);
     }
 }

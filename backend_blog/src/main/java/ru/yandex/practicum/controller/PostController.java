@@ -54,7 +54,8 @@ public class PostController {
         }
         final long countPages = postService.getCountPagesForSearchByTitle(search, pageSize);
         if(pageNumber > countPages) {
-            throw new IllegalArgumentException("Запрашиваемый номер страницы постов больше количества страниц.");
+            throw new IllegalArgumentException("Запрашиваемый номер страницы постов больше количества страниц." +
+                    "\nПереданный номер страницы:" + pageNumber + ", количество страниц всего:" + countPages);
         }
         final boolean hasPreview = pageNumber > 1;
         final boolean hasNext = pageNumber < countPages;

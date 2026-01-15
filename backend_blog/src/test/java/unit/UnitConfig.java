@@ -1,11 +1,8 @@
-package ru.yandex.practicum.test.integration;
-
+package unit;
 
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@ComponentScan(basePackages = {"ru.yandex.practicum"})
-public class IntegrationConfig {
-
+public class UnitConfig {
 }

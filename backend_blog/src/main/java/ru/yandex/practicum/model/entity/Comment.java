@@ -23,7 +23,7 @@ public class Comment {
 
     @NotNull
     @JoinColumn(name = "idpost", nullable = false, updatable = false)
-    @ManyToOne(targetEntity =  Post.class)
+    @ManyToOne(targetEntity = Post.class, cascade = {CascadeType.MERGE, CascadeType.REFRESH})
     private Post post;
 
     public Long getId() {

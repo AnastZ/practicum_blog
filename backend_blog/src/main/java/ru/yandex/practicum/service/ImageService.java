@@ -2,6 +2,7 @@ package ru.yandex.practicum.service;
 
 import jakarta.validation.constraints.NotNull;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -56,6 +57,7 @@ public class ImageService {
         final MediaType type = imageStorageService.getContentType(location);
 
         return ResponseEntity.ok()
+                .header(HttpHeaders.CACHE_CONTROL, "no-store")
                 .contentType(MediaType.parseMediaType(type.toString()))
                 .body(body);
     }

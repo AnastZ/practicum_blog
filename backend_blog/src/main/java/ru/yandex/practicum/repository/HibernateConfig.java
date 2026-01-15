@@ -54,22 +54,26 @@ public class HibernateConfig {
      *
      * @return
      */
-    private Properties hibernateProperties() {
-        Properties properties = new Properties();
-        properties.setProperty("hibernate.dialect", env.getProperty("spring.jpa.database-platform"));
-        properties.setProperty("hibernate.show_sql", env.getProperty("spring.jpa.show-sql"));
-        properties.setProperty("hibernate.format_sql", env.getProperty("spring.jpa.properties.hibernate.format_sql"));
-        properties.setProperty("hibernate.hbm2ddl.auto", env.getProperty("spring.jpa.hibernate.ddl-auto"));
-        properties.setProperty("hibernate.dialect", env.getProperty("spring.jpa.properties.hibernate.dialect"));
-        properties.setProperty("hibernate.current_session_context_class",
-                "org.springframework.orm.jpa.hibernate.SpringSessionContext");
-        properties.setProperty("hibernate.connection.handling_mode", "DELAYED_ACQUISITION_AND_HOLD");
+    public Properties hibernateProperties() throws IllegalArgumentException{
+        try{
+            final Properties properties = new Properties();
+            properties.setProperty("hibernate.dialect", env.getProperty("spring.jpa.database-platform"));
+            properties.setProperty("hibernate.show_sql", env.getProperty("spring.jpa.show-sql"));
+            properties.setProperty("hibernate.format_sql", env.getProperty("spring.jpa.properties.hibernate.format_sql"));
+            properties.setProperty("hibernate.hbm2ddl.auto", env.getProperty("spring.jpa.hibernate.ddl-auto"));
+            properties.setProperty("hibernate.current_session_context_class",
+                    "org.springframework.orm.jpa.hibernate.SpringSessionContext");
+            properties.setProperty("hibernate.connection.handling_mode", "DELAYED_ACQUISITION_AND_HOLD");
 
-        properties.setProperty("hibernate.transaction.coordinator_class",
-                "jdbc");
-        properties.setProperty("hibernate.cache.use_second_level_cache", env.getProperty("spring.jpa.properties.hibernate.cache.use_second_level_cache"));
-        properties.setProperty("hibernate.cache.use_query_cache", env.getProperty("spring.jpa.properties.hibernate.cache.use_query_cache"));
-        return properties;
+//        properties.setProperty("hibernate.transaction.coordinator_class",
+//                "jdbc");
+            properties.setProperty("hibernate.cache.use_second_level_cache", env.getProperty("spring.jpa.properties.hibernate.cache.use_second_level_cache"));
+            properties.setProperty("hibernate.cache.use_query_cache", env.getProperty("spring.jpa.properties.hibernate.cache.use_query_cache"));
+            return properties;
+        }catch (NullPointerException e){
+            throw new IllegalArgumentException(e.getMessage());
+        }
+
     }
 
     /**
