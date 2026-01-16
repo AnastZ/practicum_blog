@@ -65,7 +65,7 @@ public class Post {
     @NotNull
     private LocalDate createdDate;
 
-    @Formula(value = "(SELECT COUNT(*) FROM comment c WHERE c.idpost = idpost)")
+    @Formula(value = "(SELECT COUNT(*) FROM Comment c WHERE c.idpost = idpost)")
     private Long commentsCount;
 
     @ManyToMany(cascade = {CascadeType.MERGE, CascadeType.REFRESH})
