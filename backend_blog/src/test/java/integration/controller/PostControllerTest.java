@@ -3,7 +3,6 @@ package integration.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import integration.PostIdGenerator;
 import integration.AbstractRepositoryTest;
-import jakarta.persistence.NoResultException;
 import jakarta.validation.constraints.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,7 +39,6 @@ public class PostControllerTest extends AbstractRepositoryTest implements PostId
     @BeforeEach
     void setup() {
         mockMvc = MockMvcBuilders.webAppContextSetup(wac).build();
-
     }
 
     final static Set<String> requiredPostFields = Set.of("id", "title", "text", "tags", "likesCount", "commentsCount");
@@ -106,7 +104,7 @@ public class PostControllerTest extends AbstractRepositoryTest implements PostId
      * @throws Exception
      */
     @ParameterizedTest
-    @MethodSource("testExistingPostIds")
+    @MethodSource("existingPostIds")
     void searchSinglePosts_success(final Long postId) throws Exception {
 
         final ResultActions rs = mockMvc.perform(get(getPathForId(postId))
@@ -126,7 +124,7 @@ public class PostControllerTest extends AbstractRepositoryTest implements PostId
         });
     }
     @ParameterizedTest
-    @MethodSource("testNotExistingPostIds")
+    @MethodSource("notExistingPostIds")
     void searchSinglePosts_notSuccess(final Long postId) throws Exception {
 
         final ResultActions rs = mockMvc.perform(get(getPathForId(postId))
@@ -187,7 +185,7 @@ public class PostControllerTest extends AbstractRepositoryTest implements PostId
      * @throws Exception
      */
     @ParameterizedTest
-    @MethodSource("testExistingPostIds")
+    @MethodSource("existingPostIds")
     void updatePost_isOk(final Long id) throws Exception {
         final UpdatingPostDTO post = new UpdatingPostDTO(id,
                 "Название поста 3",
@@ -209,7 +207,7 @@ public class PostControllerTest extends AbstractRepositoryTest implements PostId
      * @throws Exception
      */
     @ParameterizedTest
-    @MethodSource("testExistingPostIds")
+    @MethodSource("existingPostIds")
     void updatePost_error(final Long id) throws Exception {
         final UpdatingPostDTO post = new UpdatingPostDTO(id + 1,
                 "Название поста 3",
@@ -230,7 +228,7 @@ public class PostControllerTest extends AbstractRepositoryTest implements PostId
      * @throws Exception
      */
     @ParameterizedTest
-    @MethodSource("testExistingPostIds")
+    @MethodSource("existingPostIds")
     void deletePost_success(final Long id) throws Exception {
         mockMvc.perform(delete(getPathForId(id))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -246,7 +244,7 @@ public class PostControllerTest extends AbstractRepositoryTest implements PostId
      * @throws Exception
      */
     @ParameterizedTest
-    @MethodSource("testExistingPostIds")
+    @MethodSource("existingPostIds")
     void incrementLikes_success(final Long id) throws Exception {
 
         final String findPost = mockMvc.perform(get(getPathForId(id))
@@ -275,7 +273,7 @@ public class PostControllerTest extends AbstractRepositoryTest implements PostId
      * @throws Exception
      */
     @ParameterizedTest
-    @MethodSource("testNotExistingPostIds")
+    @MethodSource("notExistingPostIds")
     void incrementLikes_errorPostNotFound(final Long id) throws Exception {
         mockMvc.perform(post(getPathForId(id) + "/likes")
                         .contentType(MediaType.APPLICATION_JSON)

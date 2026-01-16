@@ -125,7 +125,7 @@ public class PostService {
     @Transactional
     public PostDTO savePost(@NotNull final InputPostDTO addingPost) throws Exception {
         final Post newPost = inputPostDTOMapper.toEntity(addingPost);
-        final List<Tag> tags = tagService.findByNames(addingPost.getTags());
+        final List<Tag> tags = tagService.saveTagsAndGet(addingPost.getTags());
         newPost.setTags(tags);
 
         final Post post = postRepository.save(newPost);
@@ -143,7 +143,7 @@ public class PostService {
     public PostDTO updatePost(@NotNull final InputPostDTO updatingPost) throws Exception {
         final Post postById = this.findById(updatingPost.getId());
         final Post updatedPost = inputPostDTOMapper.toEntity(updatingPost);
-        final List<Tag> tags = tagService.findByNames(updatingPost.getTags());
+        final List<Tag> tags = tagService.saveTagsAndGet(updatingPost.getTags());
         updatedPost.setTags(tags);
         postMerger.merge(postById, updatedPost);
 

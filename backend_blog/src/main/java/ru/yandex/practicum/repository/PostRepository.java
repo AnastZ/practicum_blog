@@ -3,21 +3,15 @@ package ru.yandex.practicum.repository;
 
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.NonUniqueResultException;
-import jakarta.validation.*;
 import jakarta.validation.constraints.NotNull;
 
-import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Page;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Isolation;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import ru.yandex.practicum.model.dto.PostDTO;
 import ru.yandex.practicum.model.entity.Post;
 import ru.yandex.practicum.util.EntityValidator;
 
@@ -28,12 +22,12 @@ public class PostRepository {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final SessionFactory sessionFactory;
-    private final EntityValidator<Long> postIdValidator;
+    private final EntityValidator<Long> idValidator;
 
     public PostRepository(@NotNull final SessionFactory sessionFactory,
-                          @NotNull final EntityValidator<Long> postIdValidator) {
+                          @NotNull final EntityValidator<Long> idValidator) {
         this.sessionFactory = sessionFactory;
-        this.postIdValidator = postIdValidator;
+        this.idValidator = idValidator;
     }
 
     /** Вспомогательный метод для получения текущей сессии
@@ -68,8 +62,7 @@ public class PostRepository {
                                                     final int pageNumber,
                                                     final int pageSize) throws Exception{
         if (pageNumber < 0 || pageSize < 1) {
-            logger.warn("Переданы некорректные входные данные для поиска постов. Номер страницы (начиная с 0), переданное значение: {}. Количество записей на странице (от 1), переданное значение: {}.", pageNumber, pageSize);
-            return Collections.emptyList();
+            throw new IllegalArgumentException("Переданы некорректные входные данные для поиска постов.");
         }
 
         final List<Long> postIds = getCurrentSession().createNamedQuery("getIdsForSearchByTitle", Long.class)
@@ -84,11 +77,6 @@ public class PostRepository {
                 .getResultList();
         return results;
     }
-    private void validatePostId(@NotNull final Long id) throws IllegalArgumentException {
-        if (id < 1) {
-            throw new IllegalArgumentException("Передан некорректный уникальный номер поста.");
-        }
-    }
     /**
      * Получить пост из БД по его уникальному номеру.
      *
@@ -97,7 +85,7 @@ public class PostRepository {
      */
     @Transactional(readOnly = true)
     public @NotNull Post findById(@NotNull final Long id) throws NoResultException, NonUniqueResultException {
-        validatePostId(id);
+        idValidator.validate(id);
         return getCurrentSession().createNamedQuery("findSinglePost", Post.class)
                 .setCacheable(false)
                 .setParameter("id", id).getSingleResult();
@@ -120,7 +108,7 @@ public class PostRepository {
      */
     @Transactional
     public void delete(@NotNull final Long postId) throws Exception {
-        validatePostId(postId);
+        idValidator.validate(postId);
         final Session session = getCurrentSession();
         final Post p = session.find(Post.class, postId);
         if(Objects.isNull(p)){
@@ -137,9 +125,9 @@ public class PostRepository {
      */
     @Transactional
     public Long incrementLikes(@NotNull final Long postId) throws Exception {
-        validatePostId(postId);
+        idValidator.validate(postId);
         final Session session = getCurrentSession();
-        session.createNamedQuery("incrementLikes")
+        session.createNamedMutationQuery("incrementLikes")
                 .setParameter("id", postId)
                 .executeUpdate();
         session.flush();
@@ -157,7 +145,7 @@ public class PostRepository {
     @Transactional
     public void updatePostImagePath(@NotNull final Long postId,
                                     @NotNull final String imagePath) throws Exception {
-        validatePostId(postId);
+        idValidator.validate(postId);
         final Session session = getCurrentSession();
         final Post p = session.find(Post.class, postId);
         if(Objects.isNull(p)){

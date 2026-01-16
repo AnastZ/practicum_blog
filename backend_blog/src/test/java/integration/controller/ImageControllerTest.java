@@ -36,7 +36,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         @ContextConfiguration(name = "service", classes = ServiceConfiguration.class),
         @ContextConfiguration(name = "util", classes = UtilConfiguration.class)
 })
-
 public class ImageControllerTest extends AbstractControllerTest implements PostIdGenerator {
 
     private static final String pathToController = "/api/posts/{id}/image";
@@ -54,6 +53,7 @@ public class ImageControllerTest extends AbstractControllerTest implements PostI
 
     @Autowired
     private WebApplicationContext wac;
+
     private MockMvc mockMvc;
 
     @BeforeEach
@@ -66,7 +66,7 @@ public class ImageControllerTest extends AbstractControllerTest implements PostI
     }
 
     @ParameterizedTest
-    @MethodSource("testExistingPostIds")
+    @MethodSource("existingPostIds")
     void updatePostImage_success(final Long id) throws Exception {
         final MediaType type = MediaType.IMAGE_PNG;
         final String imageName = "image";
@@ -98,17 +98,18 @@ public class ImageControllerTest extends AbstractControllerTest implements PostI
     }
 
     @Test
-    void uploadAvatar_emptyFile_badRequest() throws Exception {
+    void uploadImage_emptyFile_badRequest() throws Exception {
         final MockMultipartFile empty = new MockMultipartFile("file", "empty.png", "image/png", new byte[0]);
 
         mockMvc.perform(multipart(pathToController, 1L).file(empty))
                 .andExpect(status().isBadRequest());
     }
-    @Test
-    void uploadAvatar_userNotFound_404() throws Exception {
-        MockMultipartFile file = new MockMultipartFile("file", "avatar.png", "image/png", new byte[]{1, 2, 3});
 
-        mockMvc.perform(multipart("/api/users/{id}/avatar", 999L).file(file))
-                .andExpect(status().isNotFound());
+    @Test
+    void uploadImage_badRequest() throws Exception {
+        final MockMultipartFile file = new MockMultipartFile("notImageName", "avatar.png", "image/png", new byte[]{1, 2, 3});
+        final Long postId = 1L;
+        mockMvc.perform(multipart(pathToController, postId).file(file))
+                .andExpect(status().isBadRequest());
     }
 }

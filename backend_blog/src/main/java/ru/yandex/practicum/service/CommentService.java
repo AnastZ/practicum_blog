@@ -64,12 +64,17 @@ public class CommentService {
      */
     @Transactional
     public CommentDTO save(@NotNull final CommentDTO commentDTO) throws Exception {
-        final Comment comment = dtoMapper.toEntity(commentDTO);
+        final Comment dtoComment = dtoMapper.toEntity(commentDTO);
+        if(! commentDTO.id().equals(0L)){
+            final Comment existingComment = commentRepository.getCommentById(dtoComment.getId());
+            if(Objects.isNull(existingComment) ||
+                    ! existingComment.getPost().getId().equals(commentDTO.postId())) {
+                throw new IllegalArgumentException("Переданного комментария не существует, либо он принадлежит другому посту.");
+            }
+        }
         final Post post = postService.findById(commentDTO.postId());
-        comment.setPost(post);
-        System.err.println(comment);
-        final Comment newComment = commentRepository.save(comment);
-        System.err.println(newComment);
+        dtoComment.setPost(post);
+        final Comment newComment = commentRepository.save(dtoComment);
         return dtoMapper.toDTO(newComment);
     }
 

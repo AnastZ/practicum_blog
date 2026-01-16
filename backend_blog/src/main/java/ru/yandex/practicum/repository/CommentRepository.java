@@ -64,7 +64,11 @@ public class CommentRepository {
                 .getSingleResult();
 
     }
-
+    @Transactional(readOnly = true)
+    public Comment getCommentById(final Long commentId) throws Exception {
+        idValidator.validate(commentId);
+        return getCurrentSession().find(Comment.class, commentId);
+    }
     /**
      * Сохранить комментарий.
      * @param comment комментарий.
@@ -95,6 +99,5 @@ public class CommentRepository {
         }
         session.remove(comment);
         session.flush();
-        session.clear();
     }
 }

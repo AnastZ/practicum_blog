@@ -1,9 +1,12 @@
 package integration.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import integration.AbstractRepositoryTest;
+import integration.CommentGenerator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -11,6 +14,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
+import ru.yandex.practicum.controller.CommentController;
 import ru.yandex.practicum.model.dto.CommentDTO;
 
 import java.util.Set;
@@ -23,7 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 
-public class CommentControllerTest extends AbstractControllerTest {
+public class CommentControllerTest extends AbstractRepositoryTest implements CommentGenerator {
 
     private static final String pathToController = "/api/posts/%d/comments";
 
@@ -61,8 +65,7 @@ public class CommentControllerTest extends AbstractControllerTest {
                 });
     }
     @ParameterizedTest
-    @CsvSource({"1, 1",
-    "2,2"})
+    @MethodSource("existingPostAndComments")
     void searchSingleComment_ok(final long postId, final long commentId) throws Exception {
 
         final ResultActions resultActions = mockMvc.perform(get(getPathForId(postId)+ "/" + commentId)
@@ -103,8 +106,7 @@ public class CommentControllerTest extends AbstractControllerTest {
         });
     }
     @ParameterizedTest
-    @CsvSource({"1, 1",
-            "2,2"})
+    @MethodSource("existingPostAndComments")
     void update(final long postId, final long commentId) throws Exception {
         final CommentDTO comment = new CommentDTO(commentId, "kfkf", postId);
         final ObjectMapper mapper = new ObjectMapper();
@@ -126,8 +128,21 @@ public class CommentControllerTest extends AbstractControllerTest {
         .andExpect(jsonPath("$.postId").value(postId));
     }
     @ParameterizedTest
-    @CsvSource({"1, 1",
-            "2,2"})
+    @MethodSource("notCorrespondingPostAndComment")
+    void update_error(final long postId, final long commentId) throws Exception {
+        final CommentDTO comment = new CommentDTO(commentId, "kfkf", postId);
+        final ObjectMapper mapper = new ObjectMapper();
+
+        mockMvc.perform(post(getPathForId(postId))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(comment)))
+                .andDo(print())
+                .andExpect(status().isBadRequest());
+
+    }
+    @ParameterizedTest
+    @MethodSource("existingPostAndComments")
     void deleteComment(final long postId, final long commentId) throws Exception {
         mockMvc.perform(delete(getPathForId(postId) + "/" + commentId)
                 .contentType(MediaType.APPLICATION_JSON)

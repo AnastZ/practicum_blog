@@ -29,7 +29,7 @@ public class ImageStorageService {
     private final ResourceLoader resourceLoader;
 
     protected ImageStorageService(@NotNull final FileUtils fileUtils,
-                                  @Value("$post.image.path") @NotNull final String imagePath,
+                                  @Value("${post.image.path}") @NotNull final String imagePath,
                                   @NotNull final ResourceLoader loader) throws SecurityException{
         this.fileUtils = fileUtils;
         UPLOAD_DIR = imagePath;

@@ -27,31 +27,28 @@ public class TagService {
     }
 
     @Transactional
-    public @NotNull List<Tag> findByNames(@NotNull final List<String> names) throws Exception {
+    public @NotNull List<Tag> saveTagsAndGet(@NotNull final List<String> names) throws Exception{
         final List<String> cleanNames = names.stream()
                 .filter(Objects::nonNull)
-                .map(String::trim)
-                .filter(name -> !name.isEmpty())
-                .distinct() // Оставляем только уникальные названия
+                .map(s->s.trim().toLowerCase())
+                .distinct()
                 .toList();
         if (cleanNames.isEmpty()) {
             return Collections.emptyList();
         }
-        final List<Tag> existingTags = tagRepository.findByNames(cleanNames);
-        final List<String> existingNames = existingTags.stream()
-                .map(t -> t.getName().toLowerCase())
+        final List<Tag> existingTagsFromDB = tagRepository.findByNames(cleanNames);
+        final List<String> existingNames = existingTagsFromDB.stream()
+                .map(Tag::getName)
                 .toList();
         final List<Tag> newTagsToSave = cleanNames.stream()
-                .filter(name -> !existingNames.contains(name.toLowerCase()))
+                .filter(name -> ! existingNames.contains(name))
                 .map(Tag::new)
                 .toList();
-
-        List<Tag> savedNewTags = Collections.emptyList();
-        if (!newTagsToSave.isEmpty()) {
-            savedNewTags = tagRepository.saveAll(newTagsToSave);
+        if(newTagsToSave.isEmpty()){
+            return existingTagsFromDB;
         }
-
-        return Stream.concat(existingTags.stream(), savedNewTags.stream()).toList();
-
+        final List<Tag> savedNewTags = tagRepository.saveAll(newTagsToSave);
+        return Stream.concat(existingTagsFromDB.stream(), savedNewTags.stream()).toList();
     }
+
 }

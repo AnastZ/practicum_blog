@@ -10,6 +10,5 @@ import ru.yandex.practicum.WebConfig;
         WebConfig.class,
 })
 @WebAppConfiguration
-@PropertySource({"classpath:content.properties"})
 public abstract class AbstractIntegrationTest {
 }
