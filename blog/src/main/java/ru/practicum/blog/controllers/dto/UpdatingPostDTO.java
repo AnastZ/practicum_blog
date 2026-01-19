@@ -1,0 +1,28 @@
+package ru.practicum.blog.controllers.dto;
+
+import jakarta.validation.constraints.NotNull;
+
+import java.util.List;
+
+public record UpdatingPostDTO(Long id, String title, String text, List<String> tags) implements InputPostDTO{
+
+    @Override
+    public Long getId() {
+        return id;
+    }
+
+    @Override
+    public String getTitle() {
+        return title;
+    }
+
+    @Override
+    public String getText() {
+        return text;
+    }
+
+    @Override
+    public List<String> getTags() {
+        return tags;
+    }
+}
