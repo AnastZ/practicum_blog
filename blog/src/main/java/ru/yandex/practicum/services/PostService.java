@@ -1,0 +1,212 @@
+package ru.practicum.blog.services;
+
+import jakarta.persistence.NoResultException;
+import jakarta.validation.constraints.NotNull;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.blog.controllers.DTOMapper;
+import ru.practicum.blog.controllers.DTOToEntityMapper;
+import ru.practicum.blog.controllers.dto.InputPostDTO;
+import ru.practicum.blog.controllers.dto.PostDTO;
+import ru.practicum.blog.models.Post;
+import ru.practicum.blog.models.Tag;
+import ru.practicum.blog.repositories.PostRepository;
+import ru.practicum.blog.services.util.Merger;
+import ru.practicum.blog.util.EntityValidator;
+
+import java.util.*;
+
+@Service
+public class PostService {
+
+    private final Logger logger = LoggerFactory.getLogger(PostService.class);
+
+    private final PostRepository postRepository;
+    private final DTOMapper<Post, PostDTO> dtoMapper;
+    private final DTOToEntityMapper<Post, InputPostDTO> inputPostDTOMapper;
+    private final Merger<Post> postMerger;
+    private final TagService tagService;
+    private final EntityValidator<Long> idValidator;
+
+    public PostService(@NotNull final PostRepository postRepository,
+                       @NotNull final DTOMapper<Post, PostDTO> dtoMapper,
+                       @NotNull final TagService tagService,
+                       @NotNull final DTOToEntityMapper<Post, InputPostDTO> inputPostDTOMapper,
+                       @NotNull final Merger<Post> postMerger,
+                       @NotNull final EntityValidator<Long> idValidator) {
+        this.postRepository = postRepository;
+        this.dtoMapper = dtoMapper;
+        this.tagService = tagService;
+        this.inputPostDTOMapper = inputPostDTOMapper;
+        this.postMerger = postMerger;
+        this.idValidator = idValidator;
+    }
+
+
+    /**
+     * Получить количество страниц с постами относительно переданного количества постов на одной странице.
+     *
+     * @param pageSize количество постов на одной странице.
+     * @return количество постов относительно переданного количества на одной странице.
+     */
+    @Transactional(readOnly = true)
+    public long getCountPagesForSearchByTitle(@NotNull final String searchString,
+                                              final int pageSize) {
+
+        return postRepository.findIdsByTitle(searchString, Pageable.ofSize(pageSize)).getTotalPages();
+    }
+
+    /**
+     * Найти посты в БД по поисковому запросу на заданной странице.
+     * Обрезать текст поста до 128 символов.
+     *
+     * @param searchString поисковой запрос.
+     * @param pageNumber   номер страницы.
+     * @param pageSize     количество записей на странице.
+     * @return результаты поиска в БД по поисковому запросу.
+     */
+    @Transactional(readOnly = true)
+    public List<PostDTO> searchAllByTitle(@NotNull final String searchString,
+                                          final int pageNumber,
+                                          final int pageSize) throws Exception {
+        final Page<Long> ids = postRepository.findIdsByTitle(searchString, Pageable.ofSize(pageSize).withPage(pageNumber-1));
+        final List<Post> posts = postRepository.findAllById(ids.getContent());
+
+        return posts.stream()
+                .filter(Objects::nonNull)
+                .peek(p -> {
+                    final String text = p.getText();
+                    if (text.length() <= 128) {
+                        return;
+                    }
+                    p.setText(text.substring(0, 128) + "...");
+                })
+                .map(dtoMapper::toDTO)
+                .toList();
+    }
+
+    /**
+     * Распаковка поста, если в обёртке пусто, то вызывается исключение.
+     * @param post обёртка с потом.
+     * @return распакованный пост.
+     * @throws NoResultException если обёртка пуста.
+     */
+    private @NotNull Post ifNotPresentThrows(final Optional<Post> post) throws NoResultException{
+        if (post.isEmpty()) {
+            throw new NoResultException("Пост не найден в БД.");
+        }
+        return post.get();
+    }
+    /**
+     * Найти пост по уникальному номеру в БД.
+     *
+     * @param id уникальный номер поста.
+     * @return результат поиска.
+     * @throws NoResultException если объект не найден в БД.
+     * @throws IllegalArgumentException если id поста < 1.
+     */
+    @Transactional(readOnly = true)
+    public @NotNull Post findById(@NotNull final Long id) throws NoResultException, IllegalArgumentException {
+        idValidator.validate(id);
+        final Optional<Post> p = postRepository.findById(id);
+        return ifNotPresentThrows(p);
+    }
+
+    /**
+     * Найти пост по уникальному номеру в БД и преобразовать его в PostDTO.
+     *
+     * @param id уникальный номер поста.
+     * @return
+     * @throws IllegalArgumentException если id поста < 1.
+     */
+    @Transactional(readOnly = true)
+    public PostDTO findByIdAndGetDTO(@NotNull final Long id) throws Exception {
+        idValidator.validate(id);
+        return dtoMapper.toDTO(findById(id));
+    }
+
+    /**
+     * Сохранить новый пост.
+     *
+     * @param addingPost данные нового поста.
+     * @return новый пост с уникальным номером из БД.
+     */
+    @Transactional
+    public PostDTO savePost(@NotNull final InputPostDTO addingPost) throws Exception {
+        final Post newPost = inputPostDTOMapper.toEntity(addingPost);
+        final List<Tag> tags = tagService.saveTagsAndGet(addingPost.getTags());
+        newPost.setTags(tags);
+        final Post post = postRepository.save(newPost);
+        return dtoMapper.toDTO(post);
+
+    }
+
+    /**
+     * Сначала из БД загружается прежний объект (по id), затем производится слияние новых данных и прежних (из БД берётся: число лайков и дата создания)
+     *
+     * @param updatingPost новые данные поста.
+     * @return обновлённый пост.
+     */
+    @Transactional
+    public PostDTO updatePost(@NotNull final InputPostDTO updatingPost) throws Exception {
+
+        final Post postById = this.findById(updatingPost.getId());
+        final Post updatedPost = inputPostDTOMapper.toEntity(updatingPost);
+        final List<Tag> tags = tagService.saveTagsAndGet(updatingPost.getTags());
+        updatedPost.setTags(tags);
+        postMerger.merge(postById, updatedPost);
+
+        final Post post = postRepository.save(updatedPost);
+        return dtoMapper.toDTO(post);
+
+    }
+
+    /**
+     * Удаление поста по уникальному номеру.
+     * @param id уникальный номер поста.
+     * @throws Exception
+     * @throws IllegalArgumentException если id поста < 1.
+     */
+    @Transactional
+    public void deletePost(@NotNull final Long id) throws Exception {
+        idValidator.validate(id);
+        postRepository.deleteById(id);
+    }
+
+    /**
+     * Инкремент количества лайков для поста по уникальному номеру.
+     * @param postId уникальный номер поста.
+     * @return инкрементированное количество лайков.
+     * @throws Exception
+     * @throws IllegalArgumentException если id поста < 1.
+     */
+    @Transactional
+    public Long incrementLikes(@NotNull final Long postId) throws Exception {
+        idValidator.validate(postId);
+        final Optional<Post> p = postRepository.findById(postId);
+        return postRepository.save(ifNotPresentThrows(p).increaseLikesCount()).getLikesCount();
+    }
+
+    /**
+     *
+     * @param postId уникальный номер поста.
+     * @param imagePath новый путь к изображени.
+     * @throws NoResultException если пост не найден в БД.
+     * @throws IllegalArgumentException если id поста < 1.
+     */
+    @Transactional
+    public void updatePostImagePath(@NotNull final Long postId,
+                                    @NotNull final String imagePath) throws NoResultException, IllegalArgumentException {
+        idValidator.validate(postId);
+        final Optional<Post> p = postRepository.findById(postId);
+        final Post post = ifNotPresentThrows(p);
+        post.setImagePath(imagePath);
+        postRepository.save(post);
+    }
+
+}

@@ -1,0 +1,14 @@
+package ru.practicum.blog.repositories;
+
+import jakarta.validation.constraints.NotNull;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import ru.practicum.blog.models.Tag;
+
+import java.util.List;
+
+public interface TagRepository extends JpaRepository<Tag, Long> {
+
+    @Query("SELECT t FROM Tag t WHERE t.name IN (:names)")
+    List<Tag> findByNames(@NotNull final List<String> names);
+}
