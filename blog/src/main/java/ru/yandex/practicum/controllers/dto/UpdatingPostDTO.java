@@ -1,6 +1,4 @@
-package ru.practicum.blog.controllers.dto;
-
-import jakarta.validation.constraints.NotNull;
+package ru.yandex.practicum.controllers.dto;
 
 import java.util.List;
 

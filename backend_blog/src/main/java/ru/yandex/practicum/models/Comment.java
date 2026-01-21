@@ -5,11 +5,6 @@ import jakarta.validation.constraints.NotNull;
 
 import java.util.Objects;
 
-@NamedQueries({
-
-        @NamedQuery(name = "getCommentByIdAndPostId",
-        query = "SELECT c FROM Comment c WHERE c.id = :commentId AND c.post.id = :postId")
-})
 @Entity
 public class Comment {
     @Id
@@ -49,7 +44,8 @@ public class Comment {
         this.post = post;
     }
 
-    protected Comment(){}
+    protected Comment() {
+    }
 
     public Comment(@NotNull final String text) {
         this.text = text;

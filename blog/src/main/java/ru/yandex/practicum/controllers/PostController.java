@@ -1,4 +1,4 @@
-package ru.practicum.blog.controllers;
+package ru.yandex.practicum.controllers;
 
 
 import jakarta.validation.constraints.NotNull;
@@ -6,11 +6,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.blog.controllers.dto.AddingPostDTO;
-import ru.practicum.blog.controllers.dto.FoundPostsDTO;
-import ru.practicum.blog.controllers.dto.PostDTO;
-import ru.practicum.blog.controllers.dto.UpdatingPostDTO;
-import ru.practicum.blog.services.PostService;
+import ru.yandex.practicum.controllers.dto.AddingPostDTO;
+import ru.yandex.practicum.controllers.dto.FoundPostsDTO;
+import ru.yandex.practicum.controllers.dto.PostDTO;
+import ru.yandex.practicum.controllers.dto.UpdatingPostDTO;
+import ru.yandex.practicum.services.PostService;
 
 import java.util.List;
 import java.util.Objects;

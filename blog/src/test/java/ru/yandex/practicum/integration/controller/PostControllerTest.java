@@ -1,8 +1,6 @@
-package integration.controller;
+package ru.yandex.practicum.integration.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import integration.PostIdGenerator;
-import integration.AbstractRepositoryTest;
+
 import jakarta.validation.constraints.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,10 +13,14 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
-import ru.yandex.practicum.model.dto.AddingPostDTO;
-import ru.yandex.practicum.model.dto.InputPostDTO;
-import ru.yandex.practicum.model.dto.UpdatingPostDTO;
-import ru.yandex.practicum.model.entity.Post;
+import ru.yandex.practicum.controllers.dto.AddingPostDTO;
+import ru.yandex.practicum.controllers.dto.InputPostDTO;
+import ru.yandex.practicum.controllers.dto.UpdatingPostDTO;
+import ru.yandex.practicum.integration.AbstractRepositoryTest;
+import ru.yandex.practicum.integration.PostIdGenerator;
+import ru.yandex.practicum.models.Post;
+import tools.jackson.databind.ObjectMapper;
+
 
 import java.util.List;
 import java.util.Set;

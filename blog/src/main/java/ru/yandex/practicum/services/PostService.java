@@ -1,4 +1,4 @@
-package ru.practicum.blog.services;
+package ru.yandex.practicum.services;
 
 import jakarta.persistence.NoResultException;
 import jakarta.validation.constraints.NotNull;
@@ -9,15 +9,15 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.blog.controllers.DTOMapper;
-import ru.practicum.blog.controllers.DTOToEntityMapper;
-import ru.practicum.blog.controllers.dto.InputPostDTO;
-import ru.practicum.blog.controllers.dto.PostDTO;
-import ru.practicum.blog.models.Post;
-import ru.practicum.blog.models.Tag;
-import ru.practicum.blog.repositories.PostRepository;
-import ru.practicum.blog.services.util.Merger;
-import ru.practicum.blog.util.EntityValidator;
+import ru.yandex.practicum.controllers.DTOMapper;
+import ru.yandex.practicum.controllers.DTOToEntityMapper;
+import ru.yandex.practicum.controllers.dto.InputPostDTO;
+import ru.yandex.practicum.controllers.dto.PostDTO;
+import ru.yandex.practicum.models.Post;
+import ru.yandex.practicum.models.Tag;
+import ru.yandex.practicum.repositories.PostRepository;
+import ru.yandex.practicum.services.util.Merger;
+import ru.yandex.practicum.util.EntityValidator;
 
 import java.util.*;
 

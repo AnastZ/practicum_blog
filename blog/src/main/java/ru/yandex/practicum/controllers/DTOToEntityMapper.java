@@ -1,6 +1,4 @@
-package ru.practicum.blog.controllers;
-
-import java.util.Optional;
+package ru.yandex.practicum.controllers;
 
 public interface DTOToEntityMapper<T, DTO> {
     T toEntity(DTO dto);

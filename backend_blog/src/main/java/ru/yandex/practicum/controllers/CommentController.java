@@ -19,6 +19,7 @@ public class CommentController {
 
     /**
      * Получить список комментариев, относящихся к посту.
+     *
      * @param postId уникальный номер поста.
      * @return список найденных комментариев.
      * @throws Exception
@@ -31,7 +32,8 @@ public class CommentController {
 
     /**
      * Получить комментарий по id и id поста.
-     * @param postId уникальный номер поста.
+     *
+     * @param postId    уникальный номер поста.
      * @param commentId уникальный номер комментария.
      * @return найденный комментарий.
      * @throws Exception
@@ -45,8 +47,9 @@ public class CommentController {
 
     /**
      * Сохранить новый комментарий.
+     *
      * @param postId уникальный номер поста.
-     * @param dto комментарий.
+     * @param dto    комментарий.
      * @return сохранённый комментарий.
      * @throws Exception
      */
@@ -59,9 +62,10 @@ public class CommentController {
 
     /**
      * Изменить существующий комментарий.
-     * @param postId уникальный номер поста.
+     *
+     * @param postId    уникальный номер поста.
      * @param commentId униклаьный номер комментария.
-     * @param dto объект с новыми данными комментария.
+     * @param dto       объект с новыми данными комментария.
      * @return сохранённый комментарий.
      * @throws Exception
      */
@@ -70,7 +74,7 @@ public class CommentController {
     protected CommentDTO update(@PathVariable("postId") final Long postId,
                                 @PathVariable("commentId") final Long commentId,
                                 @RequestBody final CommentDTO dto) throws Exception {
-        if(! commentId.equals(dto.id())){
+        if (!commentId.equals(dto.id())) {
             throw new IllegalArgumentException("CommentId and postId do not match.");
         }
         return commentService.save(dto);
@@ -78,7 +82,8 @@ public class CommentController {
 
     /**
      * Удалить комментарий.
-     * @param postId уникальный номер поста.
+     *
+     * @param postId    уникальный номер поста.
      * @param commentId уникальный номер комментария.
      * @throws Exception
      */

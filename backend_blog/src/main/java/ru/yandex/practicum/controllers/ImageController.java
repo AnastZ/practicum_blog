@@ -17,6 +17,14 @@ public class ImageController {
     public ImageController(@NotNull final ImageService imageService) {
         this.imageService = imageService;
     }
+
+    /**
+     * Обновить изображение поста.
+     *
+     * @param postId уникальный номер поста.
+     * @param image  объект изображения.
+     * @throws Exception
+     */
     @PostMapping
     @ResponseStatus(HttpStatus.OK)
     protected void updatePostImage(@PathVariable("id") final Long postId,
@@ -24,9 +32,18 @@ public class ImageController {
 
         imageService.updateImage(postId, image);
     }
+
+    /**
+     * Получить байты изображения поста.
+     *
+     * @param id уникальный номер поста.
+     * @return
+     * @throws Exception
+     */
     @GetMapping(produces = MediaType.IMAGE_JPEG_VALUE)
     @ResponseBody
     protected ResponseEntity<byte[]> getPostImage(@PathVariable("id") final Long id) throws Exception {
         return imageService.getImageAsByte(id);
     }
+
 }

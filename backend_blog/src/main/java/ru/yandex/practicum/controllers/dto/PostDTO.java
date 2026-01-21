@@ -1,18 +1,15 @@
 package ru.yandex.practicum.controllers.dto;
 
 import jakarta.validation.constraints.NotNull;
-
-
 import java.util.Collections;
 import java.util.List;
-
 
 public record PostDTO(Long id,
                       String title,
                       String text,
                       List<String> tags,
                       Long likesCount,
-                      Long commentsCount){
+                      Long commentsCount) {
 
     public PostDTO(@NotNull final Long id,
                    @NotNull final String title,
@@ -27,8 +24,10 @@ public record PostDTO(Long id,
         this.likesCount = likesCount;
         this.commentsCount = commentsCount;
     }
+
     /**
      * Получить неизменяемый массив наименований тегов.
+     *
      * @return unmodifiableList наименований тегов.
      */
     public @NotNull List<String> getTags() {

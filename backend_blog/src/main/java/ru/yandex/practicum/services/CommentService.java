@@ -36,6 +36,7 @@ public class CommentService {
 
     /**
      * Получить все комментарии поста по его id.
+     *
      * @param postId уникальный номер поста.
      * @return список комментариев поста.
      * @throws Exception
@@ -52,7 +53,8 @@ public class CommentService {
 
     /**
      * Получить комментарий по его id и id поста.
-     * @param postId уникальный номер поста.
+     *
+     * @param postId    уникальный номер поста.
      * @param commentId уникальный номер комментария.
      * @return найденный комментарий.
      * @throws Exception
@@ -63,7 +65,7 @@ public class CommentService {
         idValidator.validate(postId);
         idValidator.validate(commentId);
         final Optional<Comment> comment = commentRepository.findByIdAndPost(commentId, postId);
-        if(comment.isEmpty()){
+        if (comment.isEmpty()) {
             throw new NoResultException("Comment not found.");
         }
         return dtoMapper.toDTO(comment.get());
@@ -71,6 +73,7 @@ public class CommentService {
 
     /**
      * Сохранить комментарий.
+     *
      * @param commentDTO комментарий.
      * @return сохранённый комментарий.
      * @throws Exception
@@ -79,10 +82,10 @@ public class CommentService {
     public CommentDTO save(@NotNull final CommentDTO commentDTO) throws NoResultException, IllegalArgumentException, DataIntegrityViolationException {
         idValidator.validate(commentDTO.postId());
         final Comment dtoComment = dtoMapper.toEntity(commentDTO);
-        if(! commentDTO.id().equals(0L)){
+        if (!commentDTO.id().equals(0L)) {
             final Optional<Comment> existingComment = commentRepository.findById(dtoComment.getId());
-            if(existingComment.isEmpty() ||
-                    ! existingComment.get().getPost().getId().equals(commentDTO.postId())) {
+            if (existingComment.isEmpty() ||
+                    !existingComment.get().getPost().getId().equals(commentDTO.postId())) {
                 throw new IllegalArgumentException("Переданного комментария не существует, либо он принадлежит другому посту.");
             }
         }
@@ -94,7 +97,8 @@ public class CommentService {
 
     /**
      * Удалить комментарий из БД.
-     * @param idPost уникальный номер поста.
+     *
+     * @param idPost    уникальный номер поста.
      * @param idComment уникальный номер комментария.
      * @throws Exception
      */
@@ -104,7 +108,7 @@ public class CommentService {
         idValidator.validate(idPost);
         idValidator.validate(idComment);
         final Optional<Comment> comment = commentRepository.findByIdAndPost(idComment, idPost);
-        if(comment.isEmpty()){
+        if (comment.isEmpty()) {
             throw new IllegalArgumentException("Comment not found.");
         }
         commentRepository.delete(comment.get());

@@ -1,4 +1,4 @@
-package ru.practicum.blog.services;
+package ru.yandex.practicum.services;
 
 import jakarta.persistence.NoResultException;
 import jakarta.validation.constraints.NotNull;
@@ -6,12 +6,12 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.blog.controllers.DTOMapper;
-import ru.practicum.blog.controllers.dto.CommentDTO;
-import ru.practicum.blog.models.Comment;
-import ru.practicum.blog.models.Post;
-import ru.practicum.blog.repositories.CommentRepository;
-import ru.practicum.blog.util.EntityValidator;
+import ru.yandex.practicum.controllers.DTOMapper;
+import ru.yandex.practicum.controllers.dto.CommentDTO;
+import ru.yandex.practicum.models.Comment;
+import ru.yandex.practicum.models.Post;
+import ru.yandex.practicum.repositories.CommentRepository;
+import ru.yandex.practicum.util.EntityValidator;
 
 import java.util.List;
 import java.util.Objects;

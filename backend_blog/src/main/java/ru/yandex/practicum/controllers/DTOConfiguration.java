@@ -55,6 +55,7 @@ public class DTOConfiguration {
             return post;
         };
     }
+
     @Bean
     public DTOMapper<Comment, CommentDTO> getCommentDTOMapper() {
         return new DTOMapper<Comment, CommentDTO>() {
@@ -67,7 +68,7 @@ public class DTOConfiguration {
             @Override
             public Comment toEntity(@NotNull final CommentDTO commentDTO) {
                 final Comment c = new Comment(commentDTO.text());
-                if(! commentDTO.id().equals(0L)){
+                if (!commentDTO.id().equals(0L)) {
                     c.setId(commentDTO.id());
                 }
                 return c;

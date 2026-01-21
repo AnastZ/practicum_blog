@@ -4,17 +4,13 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.Formula;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 
-@NamedQueries(value = {
-
-        @NamedQuery(name = "getImagePath",
-        query = "SELECT p.imagePath FROM Post p WHERE p.id = :id")
-})
 @Entity
 public class Post {
     @Id
@@ -42,14 +38,14 @@ public class Post {
     @NotNull
     private LocalDate createdDate;
 
-    @Formula(value = "(SELECT COUNT(*) FROM Comment c WHERE c.idpost = idpost)")
+    @Formula(value = "(SELECT COUNT(*) FROM comment c WHERE c.idpost = idpost)")
     private Long commentsCount;
 
-    @ManyToMany(cascade = {CascadeType.MERGE, CascadeType.REFRESH})
+    @ManyToMany(cascade = {CascadeType.MERGE, CascadeType.REFRESH}, fetch = FetchType.EAGER)
     @JoinTable(
             name = "post_tags",
-            joinColumns = { @JoinColumn(name = "idpost") },
-            inverseJoinColumns = { @JoinColumn(name = "idtag") }
+            joinColumns = {@JoinColumn(name = "idpost")},
+            inverseJoinColumns = {@JoinColumn(name = "idtag")}
     )
     @OrderBy("name")
     private List<Tag> tags;
@@ -63,6 +59,7 @@ public class Post {
 
     protected Post() {
     }
+
     public Post(@NotNull final String title,
                 @NotNull final String text,
                 @NotNull final List<Tag> tags) {

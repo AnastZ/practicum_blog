@@ -1,4 +1,4 @@
-package ru.practicum.blog.util;
+package ru.yandex.practicum.util;
 
 import jakarta.validation.constraints.NotNull;
 import org.springframework.http.MediaType;

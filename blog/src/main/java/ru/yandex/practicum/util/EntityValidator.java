@@ -1,4 +1,4 @@
-package ru.practicum.blog.util;
+package ru.yandex.practicum.util;
 
 public interface EntityValidator<T> {
     default boolean isValid(T entity){

@@ -1,4 +1,4 @@
-package ru.practicum.blog.controllers;
+package ru.yandex.practicum.controllers;
 
 import jakarta.validation.constraints.NotNull;
 import org.springframework.http.HttpStatus;
@@ -6,9 +6,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import ru.practicum.blog.services.ImageService;
-
-import java.util.Objects;
+import ru.yandex.practicum.services.ImageService;
 
 @RestController
 @RequestMapping("/api/posts/{id}/image")

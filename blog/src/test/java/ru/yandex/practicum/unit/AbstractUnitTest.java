@@ -1,4 +1,4 @@
-package unit;
+package ru.yandex.practicum.unit;
 
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;

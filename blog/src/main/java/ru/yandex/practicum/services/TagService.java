@@ -1,12 +1,12 @@
-package ru.practicum.blog.services;
+package ru.yandex.practicum.services;
 
 import jakarta.validation.constraints.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.blog.models.Tag;
-import ru.practicum.blog.repositories.TagRepository;
+import ru.yandex.practicum.models.Tag;
+import ru.yandex.practicum.repositories.TagRepository;
 
 import java.util.Collections;
 import java.util.List;

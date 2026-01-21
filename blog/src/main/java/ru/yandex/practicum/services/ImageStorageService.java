@@ -1,14 +1,13 @@
-package ru.practicum.blog.services;
+package ru.yandex.practicum.services;
 
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Null;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import ru.practicum.blog.util.FileUtils;
+import ru.yandex.practicum.util.FileUtils;
 
 import java.io.IOException;
 import java.nio.file.*;

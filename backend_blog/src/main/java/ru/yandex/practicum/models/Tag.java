@@ -1,5 +1,6 @@
 package ru.yandex.practicum.models;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 
@@ -10,15 +11,16 @@ public class Tag {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "idtag",  unique = true)
+    @Column(name = "idtag", unique = true)
     private Long id;
 
     @NotNull
-    @Column(name = "tag_name", nullable = false,  unique = true)
+    @Column(name = "tag_name", nullable = false, unique = true)
     private String name;
 
-    protected Tag() {}
-
+    protected Tag() {
+    }
+    @JsonCreator
     public Tag(String name) {
         this.name = name;
     }

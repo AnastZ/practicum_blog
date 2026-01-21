@@ -1,4 +1,4 @@
-package ru.practicum.blog.controllers;
+package ru.yandex.practicum.controllers;
 
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.NonUniqueResultException;

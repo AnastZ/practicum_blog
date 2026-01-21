@@ -1,11 +1,12 @@
-package integration.controller;
+package ru.yandex.practicum.integration.controller;
 
 import org.mockito.Mockito;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-import ru.yandex.practicum.service.ImageStorageService;
-import ru.yandex.practicum.service.PostService;
+import ru.yandex.practicum.services.ImageStorageService;
+import ru.yandex.practicum.services.PostService;
+
 
 @Configuration
 public class ServiceConfiguration {

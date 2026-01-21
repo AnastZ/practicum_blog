@@ -16,3 +16,5 @@ spring:
 post:
   image:
     path: classpath:images/post/
+  title:
+    short-length: 128

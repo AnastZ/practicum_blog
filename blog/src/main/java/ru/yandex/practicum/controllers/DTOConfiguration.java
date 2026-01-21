@@ -1,23 +1,18 @@
-package ru.practicum.blog.controllers;
+package ru.yandex.practicum.controllers;
 
 import jakarta.validation.constraints.NotNull;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
-import ru.practicum.blog.controllers.dto.CommentDTO;
-import ru.practicum.blog.controllers.dto.InputPostDTO;
-import ru.practicum.blog.controllers.dto.PostDTO;
-import ru.practicum.blog.models.Comment;
-import ru.practicum.blog.models.Post;
-import ru.practicum.blog.models.Tag;
+import ru.yandex.practicum.controllers.dto.CommentDTO;
+import ru.yandex.practicum.controllers.dto.InputPostDTO;
+import ru.yandex.practicum.controllers.dto.PostDTO;
+import ru.yandex.practicum.models.Comment;
+import ru.yandex.practicum.models.Post;
+import ru.yandex.practicum.models.Tag;
 
-import javax.swing.text.html.Option;
-import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 @Configuration
 public class DTOConfiguration {

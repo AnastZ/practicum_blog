@@ -1,6 +1,5 @@
-package integration.controller;
+package ru.yandex.practicum.integration.controller;
 
-import integration.PostIdGenerator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -16,11 +15,13 @@ import org.springframework.test.context.ContextHierarchy;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
-import ru.yandex.practicum.controller.ImageController;
-import ru.yandex.practicum.model.entity.Post;
-import ru.yandex.practicum.service.ImageService;
-import ru.yandex.practicum.service.ImageStorageService;
-import ru.yandex.practicum.service.PostService;
+
+import ru.yandex.practicum.controllers.ImageController;
+import ru.yandex.practicum.integration.PostIdGenerator;
+import ru.yandex.practicum.models.Post;
+import ru.yandex.practicum.services.ImageService;
+import ru.yandex.practicum.services.ImageStorageService;
+import ru.yandex.practicum.services.PostService;
 import ru.yandex.practicum.util.ValidatorConfiguration;
 
 import java.util.Collections;
@@ -60,7 +61,7 @@ public class ImageControllerTest extends AbstractControllerTest implements PostI
     void setup() {
         MockitoAnnotations.openMocks(this);
         final ImageService imageService = new ImageService(postService, imageStorageService);
-        final ImageController imageController = new ImageController(imageService, new ValidatorConfiguration().getIdValidator());
+        final ImageController imageController = new ImageController(imageService);
         mockMvc = MockMvcBuilders.standaloneSetup(imageController).build();
 
     }

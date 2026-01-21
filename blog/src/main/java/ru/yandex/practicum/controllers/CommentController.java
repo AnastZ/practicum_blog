@@ -1,10 +1,10 @@
-package ru.practicum.blog.controllers;
+package ru.yandex.practicum.controllers;
 
 import jakarta.validation.constraints.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.blog.controllers.dto.CommentDTO;
-import ru.practicum.blog.services.CommentService;
+import ru.yandex.practicum.controllers.dto.CommentDTO;
+import ru.yandex.practicum.services.CommentService;
 
 import java.util.List;
 

@@ -13,6 +13,11 @@ spring:
       ddl-auto: none
     show-sql: true
     database-platform: org.hibernate.dialect.H2Dialect
+    properties:
+      hibernate.hibernate.format_sql: true
+
 post:
   image:
     path: classpath:images/post/
+  title:
+    short-length: 128

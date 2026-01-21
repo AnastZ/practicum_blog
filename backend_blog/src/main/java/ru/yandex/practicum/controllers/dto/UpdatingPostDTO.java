@@ -2,7 +2,7 @@ package ru.yandex.practicum.controllers.dto;
 
 import java.util.List;
 
-public record UpdatingPostDTO(Long id, String title, String text, List<String> tags) implements InputPostDTO{
+public record UpdatingPostDTO(Long id, String title, String text, List<String> tags) implements InputPostDTO {
 
     @Override
     public Long getId() {

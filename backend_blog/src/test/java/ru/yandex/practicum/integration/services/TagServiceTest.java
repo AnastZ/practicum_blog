@@ -1,19 +1,19 @@
-package ru.yandex.practicum.integration.service;
-
-import integration.AbstractRepositoryTest;
-import integration.TagNamesGenerator;
+package ru.yandex.practicum.integration.services;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import ru.yandex.practicum.model.entity.Tag;
-import ru.yandex.practicum.service.TagService;
+import org.springframework.boot.test.context.SpringBootTest;
+import ru.yandex.practicum.integration.TagNamesGenerator;
+import ru.yandex.practicum.models.Tag;
+import ru.yandex.practicum.services.TagService;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TagServiceTest extends AbstractRepositoryTest implements TagNamesGenerator {
+@SpringBootTest
+public class TagServiceTest implements TagNamesGenerator {
 
     @Autowired
     private TagService tagService;
@@ -21,8 +21,10 @@ public class TagServiceTest extends AbstractRepositoryTest implements TagNamesGe
     @ParameterizedTest
     @MethodSource("tagNamesMix")
     void saveAndGet_success(final List<String> names) throws Exception {
+        final List<String> cleanNames = tagService.getClearNames(names);
         final List<Tag> tags = tagService.saveTagsAndGet(names);
-        tags.forEach(System.out::println);
-        assertEquals(tags.size(), names.size());
+        assertEquals(tags.size(), cleanNames.size());
+        assertTrue(tags.stream().allMatch(tag -> cleanNames.contains(tag.getName())));
     }
+
 }

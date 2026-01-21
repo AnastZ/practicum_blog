@@ -1,4 +1,4 @@
-package integration;
+package ru.yandex.practicum.integration;
 
 import org.junit.jupiter.params.provider.Arguments;
 

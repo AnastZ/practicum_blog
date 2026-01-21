@@ -1,9 +1,9 @@
-package ru.practicum.blog.repositories;
+package ru.yandex.practicum.repositories;
 
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import ru.practicum.blog.models.Tag;
+import ru.yandex.practicum.models.Tag;
 
 import java.util.List;
 

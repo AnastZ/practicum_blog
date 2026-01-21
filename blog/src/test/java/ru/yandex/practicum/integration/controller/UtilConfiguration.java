@@ -1,4 +1,4 @@
-package integration.controller;
+package ru.yandex.practicum.integration.controller;
 
 import org.mockito.Mockito;
 import org.springframework.context.annotation.Bean;

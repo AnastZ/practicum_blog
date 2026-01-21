@@ -1,4 +1,4 @@
-package unit.utils;
+package ru.yandex.practicum.unit.utils;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;

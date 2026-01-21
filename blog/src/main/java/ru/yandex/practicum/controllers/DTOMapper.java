@@ -1,7 +1,5 @@
-package ru.practicum.blog.controllers;
+package ru.yandex.practicum.controllers;
 
-
-import java.util.Optional;
 
 public interface DTOMapper<T, DTO> extends EntityToDTOMapper<T, DTO>, DTOToEntityMapper<T, DTO> {
 }

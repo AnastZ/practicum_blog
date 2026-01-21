@@ -1,4 +1,4 @@
-package ru.practicum.blog.controllers.dto;
+package ru.yandex.practicum.controllers.dto;
 
 import java.util.List;
 

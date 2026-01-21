@@ -8,7 +8,12 @@ import ru.yandex.practicum.models.Tag;
 import java.util.List;
 
 public interface TagRepository extends JpaRepository<Tag, Long> {
-
+    /**
+     * Найти тэги по наименованию.
+     *
+     * @param names наименования тегов.
+     * @return список найденных тэгов.
+     */
     @Query("SELECT t FROM Tag t WHERE t.name IN (:names)")
     List<Tag> findByNames(@NotNull final List<String> names);
 }

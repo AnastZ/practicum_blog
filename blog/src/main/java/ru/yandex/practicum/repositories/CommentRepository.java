@@ -1,10 +1,9 @@
-package ru.practicum.blog.repositories;
+package ru.yandex.practicum.repositories;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import ru.practicum.blog.models.Comment;
+import ru.yandex.practicum.models.Comment;
 
 import java.util.List;
 import java.util.Optional;

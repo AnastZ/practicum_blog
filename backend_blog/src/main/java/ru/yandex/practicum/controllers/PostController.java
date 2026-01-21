@@ -44,6 +44,7 @@ public class PostController {
                     ". Ожидается, что размер страницы (pageSize) не меньше 1. Переданный размер: " + pageSize + ".");
         }
         final long countPages = postService.getCountPagesForSearchByTitle(search, pageSize);
+
         if (pageNumber > countPages) {
             throw new IllegalArgumentException("Запрашиваемый номер страницы постов больше количества страниц." +
                     "\nПереданный номер страницы:" + pageNumber + ", количество страниц всего:" + countPages);
@@ -110,13 +111,18 @@ public class PostController {
         postService.deletePost(id);
     }
 
+    /**
+     * Инкрементировать количество лайков у поста.
+     *
+     * @param id уникальный номер поста.
+     * @return инкрементированное количество лайков.
+     * @throws Exception
+     */
     @PostMapping("/{id}/likes")
     @ResponseBody
     protected Long likePost(@PathVariable("id") final Long id) throws Exception {
         return postService.incrementLikes(id);
     }
-
-
 }
 
 

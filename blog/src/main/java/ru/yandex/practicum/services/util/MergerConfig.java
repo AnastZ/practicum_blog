@@ -1,8 +1,8 @@
-package ru.practicum.blog.services.util;
+package ru.yandex.practicum.services.util;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import ru.practicum.blog.models.Post;
+import ru.yandex.practicum.models.Post;
 
 @Configuration
 public class MergerConfig {

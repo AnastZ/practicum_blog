@@ -1,4 +1,4 @@
-package integration.service;
+package ru.yandex.practicum.integration.service;
 
 import integration.AbstractRepositoryTest;
 import integration.TagNamesGenerator;

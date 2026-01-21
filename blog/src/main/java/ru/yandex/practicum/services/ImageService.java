@@ -1,4 +1,4 @@
-package ru.practicum.blog.services;
+package ru.yandex.practicum.services;
 
 import jakarta.validation.constraints.NotNull;
 import org.springframework.core.io.Resource;
@@ -8,7 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import ru.practicum.blog.models.Post;
+import ru.yandex.practicum.models.Post;
 
 
 import java.nio.file.NoSuchFileException;

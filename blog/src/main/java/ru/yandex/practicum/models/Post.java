@@ -1,4 +1,4 @@
-package ru.practicum.blog.models;
+package ru.yandex.practicum.models;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;

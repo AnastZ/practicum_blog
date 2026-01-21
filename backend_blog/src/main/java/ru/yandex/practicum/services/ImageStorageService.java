@@ -28,7 +28,7 @@ public class ImageStorageService {
 
     protected ImageStorageService(@NotNull final FileUtils fileUtils,
                                   @Value("${post.image.path}") @NotNull final String imagePath,
-                                  @NotNull final ResourceLoader loader) throws SecurityException{
+                                  @NotNull final ResourceLoader loader) throws SecurityException {
         this.fileUtils = fileUtils;
         UPLOAD_DIR = imagePath;
         fileUtils.createDirectoryIfNotExists(UPLOAD_DIR);
@@ -43,7 +43,7 @@ public class ImageStorageService {
      */
     public String saveOrUpdateImageInStorage(final MultipartFile file,
                                              final String oldImagePath) throws IllegalStateException, SecurityException {
-        if(Objects.isNull(file) || file.isEmpty()) {
+        if (Objects.isNull(file) || file.isEmpty()) {
             throw new IllegalArgumentException("Переданный файл изображения пуст.");
         }
         // Удаление старого файла, если он существует
@@ -56,13 +56,13 @@ public class ImageStorageService {
         }
         final String fileExtension = fileUtils.getFileExtension(originalFilename);
 
-        if (! fileUtils.isValidExtension(fileExtension, ALLOWED_EXTENSIONS)) {
+        if (!fileUtils.isValidExtension(fileExtension, ALLOWED_EXTENSIONS)) {
             throw new IllegalArgumentException("Неверное расширение файла изображения.");
         }
         final Path filePath = Paths.get(UPLOAD_DIR + "/" + file.getOriginalFilename());
-        try{
+        try {
             Files.write(filePath, file.getBytes());
-        }catch (IOException | UnsupportedOperationException e){
+        } catch (IOException | UnsupportedOperationException e) {
             throw new SecurityException("Не удалось сохранить файл изображения.", e);
         }
         return filePath.toAbsolutePath().toString();
@@ -81,13 +81,14 @@ public class ImageStorageService {
 
     /**
      * Загрузить изображение из файлового хранилища.
+     *
      * @param location путь к файлу.
      * @return ресурс файла.
      * @throws IOException
      */
     public @NotNull Resource loadImage(@NotNull final String location) throws NoSuchFileException {
         final Resource resource = resourceLoader.getResource(location);
-        if (! resource.exists()) {
+        if (!resource.exists()) {
             throw new NoSuchFileException("File not found at: " + location);
         }
         return resource;

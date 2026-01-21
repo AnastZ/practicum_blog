@@ -1,24 +1,19 @@
-package ru.yandex.practicum.integration.controller;
+package ru.yandex.practicum.integration.controllers;
 
 
 import jakarta.validation.constraints.NotNull;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.context.WebApplicationContext;
 import ru.yandex.practicum.controllers.dto.AddingPostDTO;
 import ru.yandex.practicum.controllers.dto.InputPostDTO;
+import ru.yandex.practicum.controllers.dto.PostDTO;
 import ru.yandex.practicum.controllers.dto.UpdatingPostDTO;
-import ru.yandex.practicum.integration.AbstractRepositoryTest;
+import ru.yandex.practicum.integration.AbstractIntegrationTest;
 import ru.yandex.practicum.integration.PostIdGenerator;
-import ru.yandex.practicum.models.Post;
 import tools.jackson.databind.ObjectMapper;
 
 
@@ -32,16 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 
-public class PostControllerTest extends AbstractRepositoryTest implements PostIdGenerator {
-
-    @Autowired
-    private WebApplicationContext wac;
-    private MockMvc mockMvc;
-
-    @BeforeEach
-    void setup() {
-        mockMvc = MockMvcBuilders.webAppContextSetup(wac).build();
-    }
+public class PostServiceTest extends AbstractIntegrationTest implements PostIdGenerator {
 
     final static Set<String> requiredPostFields = Set.of("id", "title", "text", "tags", "likesCount", "commentsCount");
     private static final String pathToController = "/api/posts";
@@ -49,7 +35,6 @@ public class PostControllerTest extends AbstractRepositoryTest implements PostId
     private static String getPathForId(final long id) {
         return pathToController + "/" + id;
     }
-
 
 
     /**
@@ -98,7 +83,6 @@ public class PostControllerTest extends AbstractRepositoryTest implements PostId
             }
         });
     }
-
     /**
      * Поиск поста но уникальному номеру.
      *
@@ -108,7 +92,6 @@ public class PostControllerTest extends AbstractRepositoryTest implements PostId
     @ParameterizedTest
     @MethodSource("existingPostIds")
     void searchSinglePosts_success(final Long postId) throws Exception {
-
         final ResultActions rs = mockMvc.perform(get(getPathForId(postId))
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
@@ -188,9 +171,9 @@ public class PostControllerTest extends AbstractRepositoryTest implements PostId
      */
     @ParameterizedTest
     @MethodSource("existingPostIds")
-    void updatePost_isOk(final Long id) throws Exception {
+    void updatePost_success(final Long id) throws Exception {
         final UpdatingPostDTO post = new UpdatingPostDTO(id,
-                "Название поста 3",
+                "Название поста 3" + id,
                 "Текст поста в формате Markdown...",
                 List.of("tag1", "tag2"));
         final ObjectMapper mapper = new ObjectMapper();
@@ -202,7 +185,6 @@ public class PostControllerTest extends AbstractRepositoryTest implements PostId
         testSaveOrUpdatePost(rs, post)
                 .andExpect(status().isOk());
     }
-
     /**
      * Обновление поста. Разные уникальные номера в пути и объекте, должна быть ошибка.
      *
@@ -258,15 +240,16 @@ public class PostControllerTest extends AbstractRepositoryTest implements PostId
                 .getResponse()
                 .getContentAsString();
 
+        System.err.println(findPost);
         final ObjectMapper mapper = new ObjectMapper();
-        final Post post = mapper.readValue(findPost, Post.class);
+        final PostDTO post = mapper.readValue(findPost, PostDTO.class);
         assertNotNull(post);
         mockMvc.perform(post(getPathForId(id) + "/likes")
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").value(post.getLikesCount() + 1));
+                .andExpect(jsonPath("$").value(post.likesCount() + 1));
     }
 
     /**

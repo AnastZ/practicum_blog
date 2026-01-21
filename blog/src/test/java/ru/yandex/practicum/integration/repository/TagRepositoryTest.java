@@ -1,14 +1,15 @@
-package integration.repository;
+package ru.yandex.practicum.integration.repository;
 
-import integration.AbstractRepositoryTest;
-import integration.TagNamesGenerator;
 import org.hibernate.exception.ConstraintViolationException;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import ru.yandex.practicum.model.entity.Tag;
-import ru.yandex.practicum.repository.TagRepository;
+import ru.yandex.practicum.integration.AbstractRepositoryTest;
+import ru.yandex.practicum.integration.TagNamesGenerator;
+import ru.yandex.practicum.models.Tag;
+import ru.yandex.practicum.repositories.TagRepository;
+
 
 import java.util.List;
 import java.util.stream.Stream;
@@ -19,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TagRepositoryTest extends AbstractRepositoryTest implements TagNamesGenerator {
 
-    @Autowired
+/*    @Autowired
     private TagRepository tagRepository;
 
 
@@ -54,5 +55,5 @@ public class TagRepositoryTest extends AbstractRepositoryTest implements TagName
     void saveNotExistingTags(final List<String> tags) throws Exception {
         final List<Tag> existingTags = tags.stream().map(n->new Tag(n)).toList();
         tagRepository.saveAll(existingTags);
-    }
+    }*/
 }

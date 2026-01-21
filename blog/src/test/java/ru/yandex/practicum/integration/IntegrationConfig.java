@@ -1,4 +1,4 @@
-package integration;
+package ru.yandex.practicum.integration;
 
 
 import org.springframework.context.annotation.Configuration;
