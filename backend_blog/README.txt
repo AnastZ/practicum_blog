@@ -14,4 +14,4 @@ MYSQL_ROOT_PASSWORD
 Запуск тестов:
 1. В консоли открыть папку с исходными файлами backend (где лежит pom.xml).
 2. Выполнить команду:
-mvn test 
+./gradlew test

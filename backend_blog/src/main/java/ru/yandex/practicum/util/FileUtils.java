@@ -1,13 +1,11 @@
 package ru.yandex.practicum.util;
 
 import jakarta.validation.constraints.NotNull;
-import org.hibernate.validator.constraints.Length;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.util.Collection;
-import java.util.UUID;
 
 @Service
 public class FileUtils {
@@ -25,6 +23,7 @@ public class FileUtils {
         }
         return true;
     }
+
     /**
      * Проверка, является ли расширение допустимым.
      *
@@ -39,6 +38,7 @@ public class FileUtils {
 
     /**
      * Получить расширение файла с точкой в нижнем регистре.
+     *
      * @param filename наименование файла с расширением.
      * @return расширение файла с точкой в нижнем регистре, либо пустая строка, если расширения нет.
      */
@@ -63,6 +63,7 @@ public class FileUtils {
 
     /**
      * Получить тип контента по расширению файла.
+     *
      * @param fileName
      * @return
      */
