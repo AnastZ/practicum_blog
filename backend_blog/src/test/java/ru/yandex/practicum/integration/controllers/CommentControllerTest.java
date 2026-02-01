@@ -32,6 +32,11 @@ public class CommentControllerTest extends AbstractIntegrationTest implements Co
 
     final static Set<String> requiredPostFields = Set.of("id", "text", "postId");
 
+    /**
+     * {@link java.util.HashMap}
+     * @param postId
+     * @throws Exception
+     */
     @ParameterizedTest
     @ValueSource(ints = {1, 2})
     void searchComments_ok(final long postId) throws Exception {

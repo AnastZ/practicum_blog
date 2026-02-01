@@ -1,4 +1,4 @@
-package ru.yandex.practicum.unit.controllers;
+package ru.yandex.practicum.unit.services;
 
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;

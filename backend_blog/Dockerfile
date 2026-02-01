@@ -1,21 +1,24 @@
 
-FROM maven:3.9.6-eclipse-temurin-21 AS build
+FROM gradle:8.7.0-jdk21 AS build
 
-RUN apt-get update && apt-get install -y dos2unix
 
 WORKDIR /app
 
+COPY build.gradle settings.gradle ./
+COPY gradlew ./
+COPY gradle ./gradle
+
 COPY src ./src
-COPY pom.xml ./
 
-RUN mvn clean package
+RUN chmod +x gradlew
+RUN ./gradlew clean bootJar --no-daemon -x test
 
-FROM tomcat:10.1.50-jdk21-temurin
+FROM eclipse-temurin:21-jre-alpine
 
-RUN rm -rf /usr/local/tomcat/webapps/*
+WORKDIR /app
 
+COPY --from=build /app/build/libs/app.jar /app/app.jar
 
-COPY --from=build /app/target/backend_blog.war /usr/local/tomcat/webapps/ROOT.war
 EXPOSE 8080
-CMD ["catalina.sh", "run"]
 
+CMD ["java", "-jar", "app.jar"]

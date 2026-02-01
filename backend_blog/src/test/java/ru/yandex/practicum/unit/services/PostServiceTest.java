@@ -1,4 +1,4 @@
-package ru.yandex.practicum.unit.controllers;
+package ru.yandex.practicum.unit.services;
 
 
 import org.junit.jupiter.api.Test;
@@ -68,7 +68,7 @@ public class PostServiceTest implements PostIdGenerator {
                     final String title = p.title();
                     if(title.length() > length + 3 || title.isEmpty()) return true;
                     if(title.length() == length + 3 && !title.endsWith("...")) return true;
-                    if(! title.contains(searchStr)) return true;
+                    //if(! title.contains(searchStr)) return true; // не подходит, потому что искомая строка может находится в обрезанной части
                     return false;
                 })
                 .filter(p->p.id() < 1L)

@@ -114,9 +114,8 @@ public class PostService {
 
         return posts.stream()
                 .filter(Objects::nonNull)
-                .filter(p -> Objects.nonNull(p.getId()) && p.getId() > 1L)
+                .filter(p -> Objects.nonNull(p.getId()) && p.getId() > 0L)
                 .filter(p -> p.getTitle().contains(searchString))
-                .filter(p -> p.getTitle().isEmpty())
                 .peek(p -> {
                     final String text = p.getText();
                     if (text.length() <= titleShortLength) {

@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.ResultActions;
 import ru.yandex.practicum.controllers.dto.AddingPostDTO;
@@ -14,6 +15,8 @@ import ru.yandex.practicum.controllers.dto.PostDTO;
 import ru.yandex.practicum.controllers.dto.UpdatingPostDTO;
 import ru.yandex.practicum.integration.AbstractIntegrationTest;
 import ru.yandex.practicum.integration.PostIdGenerator;
+import ru.yandex.practicum.repositories.PostRepository;
+import ru.yandex.practicum.services.PostService;
 import tools.jackson.databind.ObjectMapper;
 
 
@@ -27,7 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 
-public class PostServiceTest extends AbstractIntegrationTest implements PostIdGenerator {
+public class PostControllerTest extends AbstractIntegrationTest implements PostIdGenerator {
 
     final static Set<String> requiredPostFields = Set.of("id", "title", "text", "tags", "likesCount", "commentsCount");
     private static final String pathToController = "/api/posts";
@@ -35,7 +38,8 @@ public class PostServiceTest extends AbstractIntegrationTest implements PostIdGe
     private static String getPathForId(final long id) {
         return pathToController + "/" + id;
     }
-
+    @Autowired
+    private PostService service;
 
     /**
      * Проверка, что возвращённые данные не противоречат условиям.
@@ -49,12 +53,13 @@ public class PostServiceTest extends AbstractIntegrationTest implements PostIdGe
     @CsvSource({
             "111, 1, 3"
     })
-    void searchPosts_success(final Integer search,
+    void searchPosts_success(final String search,
                              final Integer pageNumber,
                              final Integer pageSize) throws Exception {
-
+        if(service.searchAllByTitle(search, pageNumber, pageSize).isEmpty())
+            System.err.println("eror");
         final ResultActions resultActions = mockMvc.perform(get(pathToController)
-                        .param("search", search.toString())
+                        .param("search", search)
                         .param("pageNumber", pageNumber.toString())
                         .param("pageSize", pageSize.toString())
                         .accept(MediaType.APPLICATION_JSON))
@@ -69,6 +74,7 @@ public class PostServiceTest extends AbstractIntegrationTest implements PostIdGe
                 .andExpect(jsonPath("$.hasPrev").value(pageNumber > 1))
                 .andExpect(jsonPath("$.hasNext").value(pageNumber < pageSize))
                 .andExpect(jsonPath("$.lastPage").value(greaterThanOrEqualTo(pageNumber)))
+                .andExpect(jsonPath("$.posts").isNotEmpty())
                 .andExpect(jsonPath("$.posts.length()").value(lessThanOrEqualTo(pageSize)))
                 .andExpect(jsonPath("$.posts[?(@.text.length() > 131)]").isEmpty())
                 .andExpect(jsonPath("$[?(" +
